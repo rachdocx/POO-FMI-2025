@@ -1,42 +1,54 @@
 #include <iostream>
 using namespace std;
 class Stiva{
-    struct Nod{
+    struct nod{
       int x;
-      Nod* next;
+      nod* next;
     };
-    Nod* varf;
+    nod* varf;
     public:
       Stiva(){
         varf = NULL;
       }
 
       ~Stiva(){
-        if(varf != NULL){
+        if(varf){
           delete varf;
         }
       }
 
       void push(int x){
-        Nod* temp = new Nod({x,varf});
+        nod* temp = new nod({x,varf});
         varf = temp;
       }
       int pop() {
-        Nod* temp = varf;
+        nod* temp = varf;
         varf = varf->next;
         int valoare = temp->x;
         delete temp;
         return valoare;
+      }
+      int varfStiva() {
+        return varf->x;
+      }
+      int lungimeStiva() {
+        nod *temp = varf;
+        int nr=0;
+        while(temp) {
+          nr++;
+          temp = temp->next;
+        }
+        return nr;
       }
       void afis() {
         if (varf == NULL) {
           cout << "stiva goala";
           return;
         }
-        Nod* temp = varf;
+        nod* temp = varf;
         while (temp) {
           cout << temp->x << " ";
-          temp = temp->next; //
+          temp = temp->next;
         }
         cout << endl;
       }
@@ -53,4 +65,8 @@ int main() {
   s.pop();
   cout << s.pop() << endl;
   s.afis();
+  s.push(78);
+  s.push(100);
+  s.afis();
+  cout << s.lungimeStiva() << endl;
 }
