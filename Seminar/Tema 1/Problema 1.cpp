@@ -7,10 +7,23 @@ class Stiva{
     };
     nod* varf;
     public:
+      //implicit
       Stiva(){
         varf = NULL;
       }
-
+      //cu parametrii
+      Stiva(int x) {
+        varf = new nod({x,NULL});
+      }
+    //constructorul de copiere
+      Stiva (Stiva& s) {     //const Stiva& s eventual
+            varf = NULL;
+            nod* temp = s.varf;
+            while (temp) {
+              push(temp->x);
+              temp = temp->next;
+            }
+      }
       ~Stiva(){
         while(varf != NULL) {
           nod* temp = varf;  //sau s.pop()
@@ -38,8 +51,10 @@ class Stiva{
         }
       }
       int varfStiva() {
-        if (varf == NULL)
+        if (varf != NULL)
           return varf->x;
+        else
+          return -1;
       }
 
       int lungimeStiva() {
@@ -57,7 +72,7 @@ class Stiva{
       }
       void afis() {
         if (varf == NULL) {
-          cout << "stiva goala";
+          cout << "stiva goala"<<endl;
           return;
         }
         nod* temp = varf;
@@ -77,5 +92,11 @@ class Stiva{
 
 };
 int main() {
-  Stiva s;
+  Stiva s(1);
+  s.push(2);
+  s.push(3);
+  Stiva s2(s);
+  s2.push(7);
+  s2.afis();
+  s.afis();
 }
