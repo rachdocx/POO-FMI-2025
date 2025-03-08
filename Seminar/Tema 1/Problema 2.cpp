@@ -14,15 +14,48 @@ class Vector {
         max_size+=50;
     }
 public:
+    //constructor implicit
     Vector() {
         n=0;
         max_size=50;
         data = new int[max_size];
     }
+    //constructor cu un singur parametru, max_size
+    Vector(int max_size1) {
+        n==0;
+        max_size=max_size1;
+        data = new int[max_size];
+    }
+    //constructor care primeste un array si il baga in vector
+    Vector(int n1, int max_size1, int v[]={}) {
+        n=n1;
+        max_size=max_size1;
+        data = new int[max_size];
+        for (int i=0; i<n; ++i) {
+            data[i]=v[i];
+        }
+    }
+    //constructor care initializeaza n1 elemente egale cu c
+    Vector(int n1, int max_size1, int c) {
+        n=n1;
+        max_size=max_size1;
+        data = new int[max_size];
+        for (int i=0; i<n; ++i) {
+            data[i]=c;
+        }
+    }
+    //constructor de copiere
+    Vector(const Vector& v) {
+        n=v.n;
+        max_size=v.max_size;
+        data = new int[max_size];
+        for (int i=0; i<n; ++i) {
+            data[i]=v.data[i];
+        }
+    }
     ~Vector() {
         delete[] data;
         data = NULL;
-        cout<<"oare merge?"<<endl;
     }
     void add(int x) {
         if (n<max_size) {
@@ -85,5 +118,12 @@ int main(){
     v.print();
     v.print_size();
     cout<<v.last_el()<<endl;
+    int valori[]={1,2,3,4,5};
+    Vector v2(5,50,valori);
+    v2.print();
+    Vector v3(5,50,10);
+    v3.print();
+    Vector v4(v3);
+    v4.print();
   return 0;
   }
