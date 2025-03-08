@@ -28,6 +28,7 @@ public:
         if (n<max_size) {
             data[n]=x;
             ++n;
+
         }
         else {
             more_data();
