@@ -5,13 +5,13 @@ class Vector {
     int n;
     int max_size;
     void more_data() {
-        int *temp = new int[max_size + 50];
+        int *temp = new int[max_size + 50]; //sau inmultit cu o constanta
         for (int i=0; i<n; ++i) {
             temp[i]=data[i];
         }
         delete[] data;
         data = temp;
-        max_size+=50;
+        max_size+=50; //sau inmultit cu o constanta
     }
 public:
     //constructor implicit
