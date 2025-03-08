@@ -126,5 +126,7 @@ int main(){
     v3.print();
     Vector v4(v3);
     v4.print();
+    v4.add(100);
+    v4.print();
   return 0;
   }
