@@ -12,8 +12,10 @@ class Stiva{
       }
 
       ~Stiva(){
-        if(varf){
-          delete varf;
+        while(varf != NULL) {
+          nod* temp = varf;  //sau s.pop()
+          varf = varf->next;
+          delete temp;
         }
       }
 
@@ -21,24 +23,37 @@ class Stiva{
         nod* temp = new nod({x,varf});
         varf = temp;
       }
+
       int pop() {
-        nod* temp = varf;
-        varf = varf->next;
-        int valoare = temp->x;
-        delete temp;
-        return valoare;
+        if (varf != NULL) {
+          nod* temp = varf;
+          varf = varf->next;
+          int valoare = temp->x;
+          delete temp;
+          return valoare;
+        }
+        else {
+          cout<<"stiva este deja goala"<<endl;
+          return -1;
+        }
       }
       int varfStiva() {
-        return varf->x;
+        if (varf == NULL)
+          return varf->x;
       }
+
       int lungimeStiva() {
-        nod *temp = varf;
-        int nr=0;
-        while(temp) {
-          nr++;
-          temp = temp->next;
+        if (varf == NULL)
+          return 0;
+        else {
+          nod *temp = varf;
+          int nr=0;
+          while(temp) {
+            nr++;
+            temp = temp->next;
+          }
+          return nr;
         }
-        return nr;
       }
       void afis() {
         if (varf == NULL) {
@@ -53,20 +68,14 @@ class Stiva{
         cout << endl;
       }
 
+    int is_empty() {
+        if (varf == NULL)
+          return 1;
+        else
+          return 0;
+      }
+
 };
 int main() {
   Stiva s;
-  s.push(5);
-  s.push(6);
-  s.push(7);
-  s.push(7);
-  s.push(8);
-  s.push(9);
-  s.pop();
-  cout << s.pop() << endl;
-  s.afis();
-  s.push(78);
-  s.push(100);
-  s.afis();
-  cout << s.lungimeStiva() << endl;
 }
