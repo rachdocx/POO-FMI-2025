@@ -21,6 +21,8 @@ public:
     }
     ~Vector() {
         delete[] data;
+        data = NULL;
+        cout<<"oare merge?"<<endl;
     }
     void add(int x) {
         if (n<max_size) {
@@ -50,10 +52,12 @@ public:
         }
     }
     void print() {
-        for (int i=0; i<n; ++i) {
-            cout<<data[i]<<" ";
+        if (data!=NULL) {
+            for (int i=0; i<n; ++i) {
+                cout<<data[i]<<" ";
+            }
+            cout<<endl;
         }
-        cout<<endl;
     }
     int print_size() {
         cout<<n<<endl;
