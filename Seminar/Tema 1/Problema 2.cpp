@@ -52,6 +52,7 @@ public:
         for (int i=0; i<n; ++i) {
             data[i]=v.data[i];
         }
+
     }
     ~Vector() {
         delete[] data;
