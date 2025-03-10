@@ -2,7 +2,7 @@
 using namespace std;
 
 class Stiva {
-  class Nod {  // Definim clasa Nod în loc de struct
+  class Nod {  // definim clasa Nod în loc de struct
   public:
     int x;
     Nod* next;
