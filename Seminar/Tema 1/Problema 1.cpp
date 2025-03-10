@@ -1,8 +1,7 @@
 #include <iostream>
 using namespace std;
-
-class Stiva {
-  class Nod {  // definim clasa Nod în loc de struct
+class Stiva{
+  class Nod {  // Definim clasa Nod în loc de struct
   public:
     int x;
     Nod* next;
@@ -12,96 +11,100 @@ class Stiva {
       next = nxt;
     }
   };
+    Nod* varf;
+    public:
+      //implicit
+      Stiva(){
+        varf = NULL;
+      }
+      //cu parametrii
+      Stiva(int x) {
+        varf = new Nod(x,NULL);
+      }
+    //constructorul de copiere
+      Stiva (Stiva& s) {     //const Stiva& s eventual
+            varf = NULL;
+            Nod* temp = s.varf;
+            while (temp) {
+              push(temp->x);
+              temp = temp->next;
+            }
+      }
+      ~Stiva(){
+        while(varf != NULL) {
+          Nod* temp = varf;  //sau s.pop()
+          varf = varf->next;
+          delete temp;
+        }
+      }
 
-  Nod* varf;
+      void push(int x){
+        Nod* temp = new Nod(x,varf);
+        varf = temp;
+      }
 
-public:
-  // Constructor implicit
-  Stiva() {
-    varf = nullptr;
-  }
+      int pop() {
+        if (varf != NULL) {
+          Nod* temp = varf;
+          varf = varf->next;
+          int valoare = temp->x;
+          delete temp;
+          return valoare;
+        }
+        else {
+          cout<<"stiva este deja goala"<<endl;
+          return -1;
+        }
+      }
+      int varfStiva() {
+        if (varf != NULL)
+          return varf->x;
+        else
+          return -1;
+      }
 
-  // Constructor cu parametru
-  Stiva(int x) {
-    varf = new Nod(x, nullptr);
-  }
+      int lungimeStiva() {
+        if (varf == NULL)
+          return 0;
+        else {
+          Nod *temp = varf;
+          int nr=0;
+          while(temp) {
+            nr++;
+            temp = temp->next;
+          }
+          return nr;
+        }
+      }
+      void afis() {
+        if (varf == NULL) {
+          cout << "stiva goala"<<endl;
+          return;
+        }
+        Nod* temp = varf;
+        while (temp) {
+          cout << temp->x << " ";
+          temp = temp->next;
+        }
+        cout << endl;
+      }
 
-  // Constructor de copiere
-  Stiva(const Stiva& s) {
-    varf = nullptr;
-    Nod* temp = s.varf;
-    while (temp) {
-      push(temp->x);
-      temp = temp->next;
-    }
-  }
+    int is_empty() {
+        if (varf == NULL)
+          return 1;
+        else
+          return 0;
+      }
 
-  // Destructor
-  ~Stiva() {
-    while (varf != nullptr) {
-      Nod* temp = varf;
-      varf = varf->next;
-      delete temp;
-    }
-  }
-
-  void push(int x) {
-    Nod* temp = new Nod(x, varf);
-    varf = temp;
-  }
-
-  int pop() {
-    if (varf != nullptr) {
-      Nod* temp = varf;
-      varf = varf->next;
-      int valoare = temp->x;
-      delete temp;
-      return valoare;
-    } else {
-      cout << "Stiva este deja goala" << endl;
-      return -1;
-    }
-  }
-
-  int varfStiva() {
-    return (varf != nullptr) ? varf->x : -1;
-  }
-
-  int lungimeStiva() {
-    int nr = 0;
-    Nod* temp = varf;
-    while (temp) {
-      nr++;
-      temp = temp->next;
-    }
-    return nr;
-  }
-
-  void afis() {
-    if (varf == nullptr) {
-      cout << "Stiva goala" << endl;
-      return;
-    }
-    Nod* temp = varf;
-    while (temp) {
-      cout << temp->x << " ";
-      temp = temp->next;
-    }
-    cout << endl;
-  }
-
-  bool is_empty() {
-    return varf == nullptr;
-  }
 };
-
 int main() {
-  Stiva s(1);
+  Stiva s;
+  s.push(1);
   s.push(2);
+  s.pop();
   s.push(3);
-  Stiva s2(s);
-  s2.push(7);
-  s2.push(8);
-  s2.afis();
+  Stiva s1(s);
+  s1.push(4);
+  s1.afis();
   s.afis();
 }
