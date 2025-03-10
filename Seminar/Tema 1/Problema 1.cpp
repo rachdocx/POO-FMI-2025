@@ -4,6 +4,11 @@ class Stiva{
     struct nod{
       int x;
       nod* next;
+      //de ce am nevoie de asa ceva pe macbook????
+      nod(int val, nod* nxt = nullptr) {
+        x = val;
+        next = nxt;
+      }
     };
     nod* varf;
     public:
@@ -13,7 +18,7 @@ class Stiva{
       }
       //cu parametrii
       Stiva(int x) {
-        varf = new nod({x,NULL});
+        varf = new nod(x,NULL);
       }
     //constructorul de copiere
       Stiva (Stiva& s) {     //const Stiva& s eventual
@@ -33,7 +38,7 @@ class Stiva{
       }
 
       void push(int x){
-        nod* temp = new nod({x,varf});
+        nod* temp = new nod(x,varf);
         varf = temp;
       }
 
@@ -97,6 +102,7 @@ int main() {
   s.push(3);
   Stiva s2(s);
   s2.push(7);
+  s2.push(8);
   s2.afis();
   s.afis();
 }
