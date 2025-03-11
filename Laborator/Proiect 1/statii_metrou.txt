@@ -1,0 +1,6 @@
+1 Universitate
+2 Piata_Unirii
+3 Tineretului
+4 Eroii_Revolutiei
+5 Constantin_Brancoveanu
+6 Piata_Sudului
