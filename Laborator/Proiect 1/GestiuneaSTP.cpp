@@ -1,6 +1,5 @@
 #include <iostream>
 #include <fstream>
-#include <vector>
 #include <cstring>
 //gestiunea sistemului de transport public proiect poo
 using namespace std;
@@ -15,13 +14,20 @@ public:
         id=0;
         strcpy(nume,"");
     }
-    Statie(int id, char nume[]) {
+    Statie(int id, const char nume[]) {
         this->id=id;
         strcpy(this->nume,nume);
     }
     Statie(const Statie &s) {
         this->id=s.id;
         strcpy(this->nume,s.nume);
+    }
+    Statie& operator=(const Statie &s) {
+        if (this != &s) {
+            this->id = s.id;
+            strcpy(this->nume, s.nume);
+        }
+        return *this;
     }
     int getId() {
         return id;
@@ -32,61 +38,84 @@ public:
     void printFile(ofstream &f) {
         f<<this->id<<" "<<this->nume<<endl;
     }
-
 };
-void loadStatii(vector<Statie> &statii) {
-    ifstream f("statii_metrou.txt");
-    while (f>>id) {
-        f>>nume;
-        statii.push_back(Statie(id,nume));
-    }
-    f.clear();
-    f.close();
-}
-void saveStatii(vector<Statie> &statii) {
-    ofstream f("statii_metrou.txt");
-    for (int i=0; i<statii.size(); i++) {
-        statii[i].printFile(f);
-    }
-    f.close();
-
-}
-int main() {
-    cout<<"1. Adaugare statie"<<endl;
-    cout<<"2. Afisare Statii"<<endl;
-    cout<<"0 Exit"<<endl;
-    cin>>op;
-    vector<Statie> statii;
-    loadStatii(statii);
-    while (op) {
-        switch (op) {
-            case 1:
-                cout<<"Introduceti ID-ul statiei: ";
-                cin>>id;
-                cout<<"Introduceti numele statiei: ";
-                cin>>nume;
-                statii.push_back(Statie(id,nume));
-                break;
-            case 2:
-                for (int i=0; i<statii.size(); i++) {
-                    statii[i].print();
-                }
-                break;
-            case 3:
-                cout<<"Introduceti ID-ul statiei: ";
-                cin>>id;
-                for (int i=0; i<statii.size(); i++) {
-                    if (id==statii[i].getId()) {
-                        statii.erase(statii.begin()+i);
-                    }
-                }
-            break;
+class Magistrala { //basically clasa vector, dar magistrala
+    private:
+    Statie *statii;
+    int n, max_size;
+    char nume[50];
+    void moreData() {
+        Statie *temp= new Statie[max_size * 2];
+        for (int i = 0; i < max_size; i++) {
+            temp[i] = statii[i];
         }
-        cout<<"1. Adaugare statie"<<endl;
-        cout<<"2. Afisare Statii"<<endl;
-        cout<<"0 Exit"<<endl;
-        cin>>op;
+        delete []statii;
+        statii = temp;
+        max_size*=2;
     }
-    saveStatii(statii);
+    public:
+    Magistrala(const char nume[]) {
+        n = 0;
+        max_size = 5;
+        strcpy( this->nume , nume);
+        statii=new Statie[max_size];
+    }
+    ~Magistrala() {
+        delete[] statii;
+        statii = NULL;
+    }
+    void adaugareStatie(const char nume[], int id) {
+        if (n<max_size) {
+            moreData();
+        }
+          Statie temp(id,nume);
+            statii[n]=temp;
+            n++;
+    }
+    void afisStatii() {
+        for (int i = 0; i < n; i++) {
+            statii[i].print();
+        }
+    }
+    Statie getStatie(int id) {
+        for (int i = 0; i < n; i++) {
+            if (statii[i].getId()==id) {
+                return statii[i];
+            }
+        }
+        return statii[0];
+    }
+    void delStatie(int id) {
+        for (int i = 0; i < n; i++) {
+            if (statii[i].getId()==id) {
+                for (int j = i; j < n; j++) {
+                    statii[j] = statii[j+1];
+                    --n;
+                }
+            }
+        }
+    }
+    void loadStatii() {
+        ifstream f("statii_metrou.txt");
+        while (f >> id) {
+            f>>nume;
+            adaugareStatie(nume,id);
+        }
+        f.clear();
+        f.close();
+    }
+    void saveStatii() {
+        ofstream f("statii_metrou.txt");
+        for (int i = 0; i <n; i++) {
+            statii[i].printFile(f);
+        }
+        f.close();
+    }
+};
+int main() {
+    Magistrala M2("M2");
+    M2.loadStatii();
+    cin>>op;
+    M2.saveStatii();
     return 0;
 }
