@@ -107,4 +107,13 @@ int main() {
   s1.push(4);
   s1.afis();
   s.afis();
+  cout << s1.varfStiva() << s1.lungimeStiva() << endl;
+  s1.pop();
+  s1.pop();
+  s1.pop();
+  s1.pop();
+  s1.pop();
+  s1.pop();
+  s1.is_empty();
+  s1.afis();
 }
