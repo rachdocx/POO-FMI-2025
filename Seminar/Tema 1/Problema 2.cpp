@@ -27,7 +27,7 @@ public:
         data = new int[max_size];
     }
     //constructor care primeste un array si il baga in vector
-    Vector(int n1, int max_size1, int v[]={}) {
+    Vector(int n1, int max_size1, int v[]) {
         n=n1;
         max_size=max_size1;
         data = new int[max_size];
