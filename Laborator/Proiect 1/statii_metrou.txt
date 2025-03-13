@@ -1,3 +1,4 @@
+8 M2:
 1 Universitate
 2 Piata_Unirii
 3 Tineretului
@@ -5,3 +6,12 @@
 5 Constantin_Brancoveanu
 6 Piata_Sudului
 7 Aparatorii_Patriei
+8 Dimitrie_Leonida
+4 M3:
+1 Izvor
+2 Piata_Unirii
+3 Timpuri_Noi
+4 Mihai_Bravu
+1 M1:
+1 Pantelimon
+0 M4:
