@@ -2,6 +2,9 @@
 #include <fstream>
 #include <cstring>
 //gestiunea sistemului de transport public proiect poo
+//de implementat clasa tren care parcuge statiile dintr o magistrala
+//de adaugat in clasa statie timpul care dureaza de la statia precedenta pana la statia respectiva
+//si sa simulez o parcurgere a trenului reala
 using namespace std;
 int op, id;
 char nume[50], nume_magistrala[50], nume_statie[50];
