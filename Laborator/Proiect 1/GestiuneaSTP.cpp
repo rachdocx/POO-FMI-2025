@@ -102,6 +102,16 @@ class Magistrala { //basically clasa vector, dar magistrala
             statii[n]=temp1;
             n++;
     }
+    void adaugareStatieBack(const char nume[], int id) {
+      if (n>=max_size) {
+        moreData();
+      }
+      Statie temp2(id,nume);
+      for (int i = n; i > 0; i--) {
+        statii[i] = statii[i-1];
+      }
+      statii[0] = temp2;
+    }
     void afisStatii() {
         for (int i = 0; i < n; i++) {
             statii[i].print();
@@ -216,7 +226,7 @@ class Sistem{
                  return &magistrale[i];
              }
          }
-         return nullptr; // în loc de return ob;
+         return nullptr;
      }
 };
 
@@ -227,6 +237,7 @@ int main() {
     cout<<"2. Adaugare Magistrala!"<<endl;
     cout<<"3. Afisare Sistem!"<<endl;
     cin>>op;
+    int op1;
     while (op!=0) {
       switch (op) {
         case 1:{
@@ -234,13 +245,23 @@ int main() {
           cin>>nume_magistrala;
           cout<<"Introduceti numele statiei si ID-UL"<<endl;
           cin>>nume_statie>>id;
+          cout<<"1 Pentru push_back, 2 Pentru push_front"<<endl;
+          cin>>op1;
           Magistrala* m = metrorex.getMagistrala(nume_magistrala);
-          if (m) {
-              m->adaugareStatie(nume_statie, id);
-              m->afisStatii();
-          } else {
-              cout << "Magistrala nu a fost gasita!" << endl;
+          if(op1==1){
+              if (m) {
+                  m->adaugareStatie(nume_statie, id);
+              } else {
+                  cout << "Magistrala nu a fost gasita!" << endl;
+              }
           }
+          else{
+              if (m) {
+                  m->adaugareStatieBack(nume_statie, id);
+              } else {
+                  cout << "Magistrala nu a fost gasita!" << endl;
+              }
+            }
          }
           break;
           case 2: {
