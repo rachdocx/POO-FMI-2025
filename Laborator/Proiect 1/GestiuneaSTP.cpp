@@ -1,10 +1,12 @@
 #include <iostream>
 #include <fstream>
 #include <cstring>
+#include <unistd.h>
 //gestiunea sistemului de transport public proiect poo
 //de implementat clasa tren care parcuge statiile dintr o magistrala
 //de adaugat in clasa statie timpul care dureaza de la statia precedenta pana la statia respectiva
 //si sa simulez o parcurgere a trenului reala
+//de facut friend functions pt input si output
 using namespace std;
 int op, id;
 char nume[50], nume_magistrala[50], nume_statie[50];
@@ -64,7 +66,6 @@ class Magistrala { //basically clasa vector, dar magistrala
      Magistrala() {
          max_size=5;
        statii = new Statie[max_size];
-
        n=0;
        strcpy(nume_magistrala,"");
      }
@@ -119,6 +120,9 @@ class Magistrala { //basically clasa vector, dar magistrala
         for (int i = 0; i < n; i++) {
             statii[i].print();
         }
+    }
+    void afisStatie(int i) {
+      statii[i].print();
     }
     Statie getStatie(int id) {
         for (int i = 0; i < n; i++) {
@@ -232,10 +236,42 @@ class Sistem{
          return nullptr;
      }
 };
-
+class Tren{
+private:
+    int id, cap_maxima;
+    char nume[50], num_magistrala[50];
+    float viteza_medie;
+public:
+    Tren(){
+        strcpy(num_magistrala, "");
+        cap_maxima = 0;
+        id = 0;
+        viteza_medie = 0;
+        strcpy(nume, "");
+    }
+    Tren(int id, int cap_maxima, const char *nume, const char *num_magistrala, float viteza_medie){
+        this->id = id;
+        this->cap_maxima = cap_maxima;
+        strcpy(this->nume, nume);
+        strcpy(this->num_magistrala, num_magistrala);
+        this->viteza_medie = viteza_medie;
+        strcpy(this->nume, "");
+    }
+    void setTren(Sistem &sistem){
+      	Magistrala *temp = sistem.getMagistrala(this->num_magistrala);
+        cout<<"Trenulcu directia Dimitrie Leonida pleaca de la:"<<endl;
+		for (int i = 0; i < temp->getNr(); i++) {
+        	temp->afisStatie(i);
+            sleep(5);
+            cout<<"Trenul a ajuns la:"<<endl;
+		}
+        }
+};
 int main() {
     Sistem metrorex("Metrorex");
     metrorex.loadMagistrale();
+    Tren viena(1,50,"vienna","M2:",1);
+    viena.setTren(metrorex);
     cout<<"1. Adaugare Statie!"<<endl;
     cout<<"2. Adaugare Magistrala!"<<endl;
     cout<<"3. Afisare Sistem!"<<endl;

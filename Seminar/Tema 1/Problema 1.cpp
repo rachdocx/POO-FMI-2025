@@ -1,7 +1,7 @@
 #include <iostream>
 using namespace std;
 class Stiva{
-  class Nod {  // Definim clasa Nod în loc de struct
+  class Nod {
   public:
     int x;
     Nod* next;
