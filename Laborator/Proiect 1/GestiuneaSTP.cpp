@@ -2,6 +2,8 @@
 #include <fstream>
 #include <cstring>
 #include <unistd.h>
+#include <thread>
+#include <atomic>
 //gestiunea sistemului de transport public proiect poo
 //de implementat clasa tren care parcuge statiile dintr o magistrala
 //de adaugat in clasa statie timpul care dureaza de la statia precedenta pana la statia respectiva
@@ -10,6 +12,18 @@
 using namespace std;
 int op, id;
 char nume[50], nume_magistrala[50], nume_statie[50];
+atomic<bool> stopLoop(false);
+void checkForExit() {
+    string input;
+    while (true) {
+        cin >> input;  // Așteaptă input de la utilizator
+        if (input == "exit") {  // Dacă utilizatorul tastează "exit"
+            stopLoop = true;  // Setăm flag-ul să oprească loop-ul principal
+            break;  // Iesim din while(true) -> thread-ul se închide
+        }
+    }
+}
+
 class Statie {
 private:
     int id;
@@ -41,7 +55,7 @@ public:
       return nume;
     }
     void print() {
-        cout<<this->id<<" "<<this->nume<<endl;
+        cout<<this->nume;
     }
     void printFile(ofstream &f) {
         f<<this->id<<" "<<this->nume<<endl;
@@ -107,7 +121,7 @@ class Magistrala { //basically clasa vector, dar magistrala
             n++;
     }
     void adaugareStatieBack(const char nume[], int id) {
-      if (n>=max_size) {
+      if (n>max_size) {
         moreData();
       }
       Statie temp2(id,nume);
@@ -115,10 +129,12 @@ class Magistrala { //basically clasa vector, dar magistrala
         statii[i] = statii[i-1];
       }
       statii[0] = temp2;
+      n++;
     }
     void afisStatii() {
         for (int i = 0; i < n; i++) {
             statii[i].print();
+            cout<<endl;
         }
     }
     void afisStatie(int i) {
@@ -225,6 +241,7 @@ class Sistem{
        for (int i = 0; i < n; i++) {
          cout<<magistrale[i].getNr()<<" "<<magistrale[i].getNume()<<endl;
          magistrale[i].afisStatii();
+         cout<<endl;
        }
      }
     Magistrala* getMagistrala(const char nume[]) {
@@ -255,23 +272,62 @@ public:
         strcpy(this->nume, nume);
         strcpy(this->num_magistrala, num_magistrala);
         this->viteza_medie = viteza_medie;
-        strcpy(this->nume, "");
     }
     void setTren(Sistem &sistem){
+      	//lowk foarte glitchuita functie
       	Magistrala *temp = sistem.getMagistrala(this->num_magistrala);
-        cout<<"Trenulcu directia Dimitrie Leonida pleaca de la:"<<endl;
-		for (int i = 0; i < temp->getNr(); i++) {
+        thread inputThread(checkForExit);
+        while(!stopLoop){
+        cout<<"Trenul cu directia: ";
+        temp->afisStatie(temp->getNr()-1);
+        cout<<" pleaca de la:"<<endl;
+		for (int i = 0; i < temp->getNr() ; i++) {
         	temp->afisStatie(i);
-            sleep(5);
+            cout<<endl;
+            sleep(3);
             cout<<"Trenul a ajuns la:"<<endl;
+            if(stopLoop){
+             	inputThread.join();
+              return;
+            }
 		}
+        cout<<"Trenul intoarce la: ";
+        temp->afisStatie(temp->getNr()-1);
+        cout<<" si pleaca catre: ";
+        temp->afisStatie(0);
+        cout<<endl;
+        cout<<"Trenul cu directia: ";
+        temp->afisStatie(0);
+        cout<<" pleaca de la:"<<endl;
+        for (int i = temp->getNr()-1 ; i >0 ; i--) {
+          temp->afisStatie(i);
+          cout<<endl;
+          sleep(3);
+          cout<<"Trenul a ajuns la:"<<endl;
+          if(stopLoop){
+            inputThread.join();
+            return;
+          }
         }
+        temp->afisStatie(0);
+        cout<<endl;
+        }
+        inputThread.join();
+    }
+    void schimbareMagistrala(const char nume[]){
+      strcpy(num_magistrala, nume);
+    }
+    void saveTren(){
+      ofstream f("trenuri.txt");
+      f<<id<<' '<<cap_maxima<<' '<<this->nume<<' '<<num_magistrala<<' '<<viteza_medie<<endl;
+    }
 };
 int main() {
     Sistem metrorex("Metrorex");
     metrorex.loadMagistrale();
     Tren viena(1,50,"vienna","M2:",1);
     viena.setTren(metrorex);
+    viena.saveTren();
     cout<<"1. Adaugare Statie!"<<endl;
     cout<<"2. Adaugare Magistrala!"<<endl;
     cout<<"3. Afisare Sistem!"<<endl;
@@ -320,6 +376,6 @@ int main() {
      cin>>op;
     }
     metrorex.saveMagistrale();
-    metrorex.afisMagistrale();
+
     return 0;
 }
