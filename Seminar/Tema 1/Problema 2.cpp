@@ -22,7 +22,7 @@ public:
     }
     //constructor cu un singur parametru, max_size
     Vector(int max_size1) {
-        n==0;
+        n=0;
         max_size=max_size1;
         data = new int[max_size];
     }
@@ -75,14 +75,14 @@ public:
             cout<<"vectorul este gol"<<endl;
             return -1;
         }else
-            return data[n];
+            return data[n-1];
     }
     void del() {
         if (n==0) {
             cout<<"vectorul este gol"<<endl;
             return;
         }else {
-            data[n]=0;
+            data[n-1]=0;
             --n;
         }
     }
@@ -99,7 +99,7 @@ public:
         return n;
     }
     int acc_el(int i) {
-        if (i>=0 && i<=n)
+        if (i>=0 && i<n)
             return data[i];
         else {
             cout<<"index invalid"<<endl;
@@ -127,6 +127,9 @@ int main(){
     Vector v4(v3);
     v4.print();
     v4.add(100);
+    v4.print();
+    cout<<v4.last_el()<<endl;
+    v4.del();
     v4.print();
   return 0;
   }

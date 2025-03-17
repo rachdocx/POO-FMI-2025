@@ -4,14 +4,16 @@
 #include <unistd.h>
 #include <thread>
 #include <atomic>
+#include <vector>
 //gestiunea sistemului de transport public proiect poo
 //de implementat clasa tren care parcuge statiile dintr o magistrala
 //de adaugat in clasa statie timpul care dureaza de la statia precedenta pana la statia respectiva
 //si sa simulez o parcurgere a trenului reala
 //de facut friend functions pt input si output
+//lowk terminat conceptual dar mai trb sa termin cerintele din enunt
 using namespace std;
 int op, id;
-char nume[50], nume_magistrala[50], nume_statie[50];
+char nume[50], nume_magistrala[50], nume_statie[50], nume_tren[50];
 atomic<bool> stopLoop(false);
 void checkForExit() {
     string input;
@@ -312,6 +314,7 @@ public:
         temp->afisStatie(0);
         cout<<endl;
         }
+        stopLoop = false;
         inputThread.join();
     }
     void schimbareMagistrala(const char nume[]){
@@ -321,61 +324,209 @@ public:
       ofstream f("trenuri.txt");
       f<<id<<' '<<cap_maxima<<' '<<this->nume<<' '<<num_magistrala<<' '<<viteza_medie<<endl;
     }
+    char * getNume(){
+      return nume;
+    }
+    friend istream& operator>>(istream& in, Tren& t) {
+        in >> t.id;
+        in >> t.nume;
+        in >> t.num_magistrala;
+        in >> t.cap_maxima;
+        in >> t.viteza_medie;
+        return in;
+    }
+        friend ostream& operator<<(ostream& out, const Tren& t) {
+        out << t.id << " " << t.nume << " " << t.num_magistrala<< " " << t.cap_maxima << " " << t.viteza_medie << " ";
+        return out;
+    }
+};
+class Depou{
+  private:
+    char nume[50];
+    int nr;
+    vector<Tren> trenuri;
+  public:
+    Depou(){
+      strcpy(nume, "");
+      nr = 0;
+      trenuri.clear();
+    }
+    Depou(const char nume1[]){
+      strcpy(nume, nume1);
+      nr = 0;
+      trenuri.clear();
+    }
+    ~Depou(){
+      trenuri.clear();
+    }
+    void loadTrenuri(){
+    ifstream f("trenuri.txt");
+    Tren temp;
+    while(f>>temp){
+      trenuri.push_back(temp);
+    }
+    f.close();
+    }
+    void afisTrenuri(){
+      for (int i = 0; i < trenuri.size(); i++) {
+        cout<<trenuri[i]<<endl;
+      }
+    }
+    void saveTrenuri(){
+      ofstream f("trenuri.txt");
+      for(int i = 0; i < trenuri.size(); i++){
+        f<<trenuri[i]<<endl;
+      }
+      f.close();
+    }
+    void addTrenuri(Tren &trenuri1){
+      trenuri.push_back(trenuri1);
+    }
+    Tren getTren(char nume1[]){
+      for(int i = 0; i < trenuri.size(); i++){
+        if(strcmp(nume1, trenuri[i].getNume()) == 0){
+          return trenuri[i];
+        }
+      }
+    }
+    Tren* getTren1(const char nume[]) {
+        for (int i = 0; i < trenuri.size(); i++) {
+            if (trenuri[i].getNume() == nume) {
+                return &trenuri[i];  // Returnăm adresa trenului găsit
+            }
+        }
+        return nullptr;  // Returnăm nullptr dacă nu găsim trenul
+    }
+    void schimbareMagistrala(const char nume[], const char numeMag[]){
+        for (int i = 0; i < trenuri.size(); i++) {
+          if(strcmp(nume, trenuri[i].getNume()) == 0){
+               trenuri[i].schimbareMagistrala(numeMag);
+               return;
+          }
+        }
+    }
+
 };
 int main() {
-    Sistem metrorex("Metrorex");
+    Sistem metrorex;
+    Depou trenuriMetrorex;
+    trenuriMetrorex.loadTrenuri();
     metrorex.loadMagistrale();
-    Tren viena(1,50,"vienna","M2:",1);
-    viena.setTren(metrorex);
-    viena.saveTren();
-    cout<<"1. Adaugare Statie!"<<endl;
-    cout<<"2. Adaugare Magistrala!"<<endl;
-    cout<<"3. Afisare Sistem!"<<endl;
-    cin>>op;
-    int op1;
-    while (op!=0) {
-      switch (op) {
-        case 1:{
-          cout<<"Introduceti numele magistralei unde introduceti statia"<<endl;
-          cin>>nume_magistrala;
-          cout<<"Introduceti numele statiei si ID-UL"<<endl;
-          cin>>nume_statie>>id;
-          cout<<"1 Pentru push_back, 2 Pentru push_front"<<endl;
-          cin>>op1;
-          Magistrala* m = metrorex.getMagistrala(nume_magistrala);
-          if(op1==1){
-              if (m) {
-                  m->adaugareStatie(nume_statie, id);
-              } else {
-                  cout << "Magistrala nu a fost gasita!" << endl;
-              }
-          }
-          else{
-              if (m) {
-                  m->adaugareStatieBack(nume_statie, id);
-              } else {
-                  cout << "Magistrala nu a fost gasita!" << endl;
-              }
+    int optiune;
+    cout<<"1. Pentru Gestiunea Magistralelor"<<endl;
+    cout<<"2. Pentru Gestiunea Trenurilor"<<endl;
+    cout<<"0. Pentru iesirea din aplicatie"<<endl;
+    cin>>optiune;
+    while(optiune!=0){
+      switch(optiune){
+        case 1:
+          cout<<"1 Pentru adaugare statie"<<endl;
+          cout<<"2. Pentru adaugare magistrala"<<endl;
+          cout<<"3. Pentru afisarea sistemului"<<endl;
+          cout<<"0. Pentru a te intoarce"<<endl;
+          cin>>op;
+          while(op!=0){
+            switch(op){
+                case 1:{
+                    cout<<"Introduceti numele magistralei unde vreti sa introduceti statia"<<endl;
+                    cin>>nume_magistrala;
+                    cout<<"Introduceti numele statiei"<<endl;
+                    cin>>nume_statie;
+                    cout<<"Introduceti ID-ul statiei"<<endl;
+                    cin>>id;
+                    int op1;
+                    cout<<"1 Pentru push_front, 2 Pentru push_back"<<endl;
+                    cin>>op1;
+                    Magistrala *m = metrorex.getMagistrala(nume_magistrala);
+                    if(op1==1){
+                      if(m)
+                        m->adaugareStatie(nume_statie,id);
+                      else
+                        cout<<"Magistrala nu a fost gasita"<<endl;
+                    }
+                    else if(op1==2){
+                      if(m)
+                        m->adaugareStatieBack(nume_statie,id);
+                      else
+                        cout<<"Magistrala nu a fost gasita"<<endl;
+                    }
+                }
+                break;
+                case 2:{
+                  cout<<"Introduceti numele magistralei"<<endl;
+                  cin>>nume_magistrala;
+                  Magistrala temp2(nume_magistrala);
+                  metrorex.adaugareMagistrala(temp2, 0);
+
+                }
+                break;
+                case 3:{
+                  metrorex.afisMagistrale();
+                    break;
+                }
+
             }
-         }
-          break;
-          case 2: {
-              cout << "Introduceti numele magistralei: ";
-              cin >> nume_magistrala;
-              Magistrala temp2(nume_magistrala);
-              metrorex.adaugareMagistrala(temp2, 0);
-              break;
+              cout<<"1. Pentru adaugare statie"<<endl;
+              cout<<"2. Pentru adaugare magistrala"<<endl;
+              cout<<"3. Pentru afisarea sistemului"<<endl;
+              cout<<"0. Pentru a te intoarce"<<endl;
+              cin>>op;
           }
-         case 3:
-             metrorex.afisMagistrale();
-           break;
+
+      break;
+      case 2:
+        cout<<"1. Afisarea tuturor trenurilor"<<endl;
+        cout<<"2. Vizualizarea traseului unui tren"<<endl;
+        cout<<"3. Pentru adaugarea unui tren"<<endl;
+        cout<<"4. Pentru a muta trenul pe alta magistrala"<<endl;
+        cout<<"0. Pentru a te intoare"<<endl;
+        cin>>op;
+        while(op!=0){
+          switch(op){
+            case 1:
+              trenuriMetrorex.afisTrenuri();
+              break;
+            case 2:{
+              cout<<"Introduceti numele trenului"<<endl;
+              cin>>nume_tren;
+              Tren temp = trenuriMetrorex.getTren(nume_tren);
+              stopLoop = false;
+              temp.setTren(metrorex);
+              break;
+            }
+            case 3:{
+              cout<<"Introduceti ID-ul, Numele, Magistrala, Capacitatea si Viteza trenului"<<endl;
+              Tren temp1;
+              cin>>temp1;
+
+              trenuriMetrorex.addTrenuri(temp1);
+              break;
+            }
+            case 4:{
+              cout<<"Introduceti numele trenului care trebuie mutat"<<endl;
+              cin>>nume_tren;
+              cout<<"Introduceti magistrala unde trebuie mutat"<<endl;
+              cin>>nume_magistrala;
+
+              trenuriMetrorex.schimbareMagistrala(nume_tren, nume_magistrala);
+              //eroare bombastica help SEG FAULT GRAHHH
+            }
+          }
+            cout<<"1. Afisarea tuturor trenurilor"<<endl;
+            cout<<"2. Vizualizarea traseului unui tren"<<endl;
+            cout<<"3. Pentru adaugarea unui tren"<<endl;
+            cout<<"4. Pentru a muta trenul pe alta magistrala"<<endl;
+            cout<<"0. Pentru a te intoarce"<<endl;
+            cin>>op;
+        }
+      break;
       }
-        cout<<"1. Adaugare Statie!"<<endl;
-        cout<<"2. Adaugare Magistrala!"<<endl;
-        cout<<"3. Afisare Sistem!"<<endl;
-     cin>>op;
+        cout<<"1. Pentru Gestiunea Magistralelor"<<endl;
+        cout<<"2. Pentru Gestiunea Trenurilor"<<endl;
+        cout<<"0. Pentru iesirea din aplicatie"<<endl;
+        cin>>optiune;
     }
     metrorex.saveMagistrale();
-
+    trenuriMetrorex.saveTrenuri();
     return 0;
 }

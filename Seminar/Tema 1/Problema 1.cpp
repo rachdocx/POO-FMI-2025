@@ -30,6 +30,24 @@ class Stiva{
               temp = temp->next;
             }
       }
+  Stiva& operator=(const Stiva& other) {
+        if (this == &other)
+          return *this;
+        while (!is_empty()) {
+          pop();
+        }
+        Stiva aux;
+        Nod* temp = other.varf;
+        while (temp) {
+          aux.push(temp->x);
+          temp = temp->next;
+        }
+        while (!aux.is_empty()) {
+          push(aux.pop());
+        }
+        return *this;
+      }
+
       ~Stiva(){
         while(varf != NULL) {
           Nod* temp = varf;  //sau s.pop()
@@ -107,6 +125,9 @@ int main() {
   s1.push(4);
   s1.afis();
   s.afis();
+  Stiva s2;
+  s2 = s1;
+  s2.afis();
   cout << s1.varfStiva() << s1.lungimeStiva() << endl;
   s1.pop();
   s1.pop();
