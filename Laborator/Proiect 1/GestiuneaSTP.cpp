@@ -5,12 +5,14 @@
 #include <thread>
 #include <atomic>
 #include <vector>
+//de ce n am folosit stl uri de la inceput ma omor original
 //gestiunea sistemului de transport public proiect poo
 //de implementat clasa tren care parcuge statiile dintr o magistrala
 //de adaugat in clasa statie timpul care dureaza de la statia precedenta pana la statia respectiva
 //si sa simulez o parcurgere a trenului reala
 //de facut friend functions pt input si output
 //lowk terminat conceptual dar mai trb sa termin cerintele din enunt
+//de reparat incapsularea ptr adaugare statie
 using namespace std;
 int op, id;
 char nume[50], nume_magistrala[50], nume_statie[50], nume_tren[50];
@@ -18,10 +20,10 @@ atomic<bool> stopLoop(false);
 void checkForExit() {
     string input;
     while (true) {
-        cin >> input;  // Așteaptă input de la utilizator
-        if (input == "exit") {  // Dacă utilizatorul tastează "exit"
-            stopLoop = true;  // Setăm flag-ul să oprească loop-ul principal
-            break;  // Iesim din while(true) -> thread-ul se închide
+        cin >> input;
+        if (input == "exit") {
+            stopLoop = true;
+            break;
         }
     }
 }
@@ -254,6 +256,23 @@ class Sistem{
          }
          return nullptr;
      }
+     void deleteMagistralaByname(const char nume[]) {
+       for (int i = 0; i < n; i++) {
+         if (strcmp(magistrale[i].getNume(), nume) == 0) {
+           for (int j = i; j < n-1; j++) {
+             magistrale[j] = magistrale[j+1];
+           }
+         }
+       }
+       --n;
+         Magistrala *temp = new Magistrala[max_size];
+         for (int k = 0; k < n; k++) {
+             temp[k] = magistrale[k];
+         }
+         delete[] magistrale;
+         magistrale = temp;
+         return;
+     }
 };
 class Tren{
 private:
@@ -405,7 +424,13 @@ class Depou{
           }
         }
     }
-
+    void deleteTrenByName(const char nume[]){
+      for (int i = 0; i < trenuri.size(); i++) {
+        if(strcmp(nume, trenuri[i].getNume()) == 0){
+          trenuri.erase(trenuri.begin() + i);
+        }
+      }
+    }
 };
 int main() {
     Sistem metrorex;
@@ -423,6 +448,8 @@ int main() {
           cout<<"1 Pentru adaugare statie"<<endl;
           cout<<"2. Pentru adaugare magistrala"<<endl;
           cout<<"3. Pentru afisarea sistemului"<<endl;
+          cout<<"4. Pentru a sterge o magistrala"<<endl;
+          cout<<"5. Pentru a sterge o statie"<<endl;
           cout<<"0. Pentru a te intoarce"<<endl;
           cin>>op;
           while(op!=0){
@@ -464,11 +491,30 @@ int main() {
                   metrorex.afisMagistrale();
                     break;
                 }
+                case 4:{
+                  cout<<"Introduceti numele magistralei de sters!"<<endl;
+                  cin>>nume_magistrala;
+                  metrorex.deleteMagistralaByname(nume_magistrala);
+                  break;
+                }
+                case 5:{
+                  cout<<"Atentie! Stergerea statiilor se face de la capetele magistralei"<<endl;
+                  cout<<"Introduceti numele magistralei unde se afla statia de sters"<<endl;
+                  cin>>nume_magistrala;
+                  cout<<"Introduceti numele statiei de sters"<<endl;
+                  cin>>nume_statie;
+                  cout<<"1 Pentru pop_front, 2 Pentru pop_back"<<endl;
+                  int op3;
+                  cin>>op3;
+                  //de facut cod corect pentru chestia asta
 
+                }
             }
               cout<<"1. Pentru adaugare statie"<<endl;
               cout<<"2. Pentru adaugare magistrala"<<endl;
               cout<<"3. Pentru afisarea sistemului"<<endl;
+              cout<<"4. Pentru a sterge o magistrala"<<endl;
+              cout<<"5. Pentru a sterge o statie"<<endl;
               cout<<"0. Pentru a te intoarce"<<endl;
               cin>>op;
           }
@@ -479,6 +525,7 @@ int main() {
         cout<<"2. Vizualizarea traseului unui tren"<<endl;
         cout<<"3. Pentru adaugarea unui tren"<<endl;
         cout<<"4. Pentru a muta trenul pe alta magistrala"<<endl;
+        cout<<"5. Pentru a sterge un tren"<<endl;
         cout<<"0. Pentru a te intoare"<<endl;
         cin>>op;
         while(op!=0){
@@ -511,11 +558,17 @@ int main() {
               trenuriMetrorex.schimbareMagistrala(nume_tren, nume_magistrala);
               //eroare bombastica help SEG FAULT GRAHHH
             }
+              case 5:{
+                cout<<"Introdu numele trenului:"<<endl;
+                cin>>nume_tren;
+                trenuriMetrorex.deleteTrenByName(nume_tren);
+              }
           }
             cout<<"1. Afisarea tuturor trenurilor"<<endl;
             cout<<"2. Vizualizarea traseului unui tren"<<endl;
             cout<<"3. Pentru adaugarea unui tren"<<endl;
             cout<<"4. Pentru a muta trenul pe alta magistrala"<<endl;
+            cout<<"5. Pentru a sterge un tren"<<endl;
             cout<<"0. Pentru a te intoarce"<<endl;
             cin>>op;
         }
