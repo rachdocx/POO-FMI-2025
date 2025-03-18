@@ -29,7 +29,7 @@
 1 1_Decembrie_1989
 1 Nicolae_Teclu
 1 Anghel_Saligny
-21 M1:
+20 M1:
 1 Pantelimon
 2 Costin_Georgian
 3 Titan
@@ -50,5 +50,4 @@
 17 Obor
 18 Piata_Iancului
 19 Piata_Muncii
-20 Dristor_2
 0 M4:

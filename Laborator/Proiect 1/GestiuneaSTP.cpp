@@ -15,7 +15,7 @@
 //de reparat incapsularea ptr adaugare statie
 using namespace std;
 int op, id;
-char nume[50], nume_magistrala[50], nume_statie[50], nume_tren[50];
+char  nume_magistrala[50], nume_statie[50], nume_tren[50];
 atomic<bool> stopLoop(false);
 void checkForExit() {
     string input;
@@ -27,7 +27,6 @@ void checkForExit() {
         }
     }
 }
-
 class Statie {
 private:
     int id;
@@ -64,8 +63,12 @@ public:
     void printFile(ofstream &f) {
         f<<this->id<<" "<<this->nume<<endl;
     }
+    friend istream &operator>>(istream &os, Statie &s1) {
+      os>>s1.id>>s1.nume;
+      return os;
+    }
 };
-class Magistrala { //basically clasa vector, dar magistrala
+class Magistrala { //basically clasa vector de la tema, dar magistrala
     private:
     Statie *statii;
     int n, max_size;
@@ -124,6 +127,13 @@ class Magistrala { //basically clasa vector, dar magistrala
             statii[n]=temp1;
             n++;
     }
+    void adaugareStatie1(const Statie &s) {
+      if (n>=max_size) {
+        moreData();
+      }
+      statii[n]=s;
+      n++;
+    }
     void adaugareStatieBack(const char nume[], int id) {
       if (n>max_size) {
         moreData();
@@ -135,6 +145,10 @@ class Magistrala { //basically clasa vector, dar magistrala
       statii[0] = temp2;
       n++;
     }
+    void delStatieFront(){
+     	if(n>0)
+          n--;
+     }
     void afisStatii() {
         for (int i = 0; i < n; i++) {
             statii[i].print();
@@ -157,12 +171,12 @@ class Magistrala { //basically clasa vector, dar magistrala
             if (statii[i].getId()==id) {
                 for (int j = i; j < n; j++) {
                     statii[j] = statii[j+1];
-                    --n;
                 }
+                --n;
             }
         }
     }
-    void loadStatii() {
+/*    void loadStatii() {
         ifstream f("statii_metrou.txt");
         char temp[50];
         f>>temp;
@@ -173,12 +187,25 @@ class Magistrala { //basically clasa vector, dar magistrala
         }
         f.clear();
         f.close();
-    }
+    }*/
     void saveStatii(ofstream &f) {
         for (int i = 0; i <n; i++) {
             f<<statii[i].getId()<<" "<<statii[i].getNume()<<endl;
         }
     }
+    //o sa ma bantuie tot proiectul ca m am incapatanat eu sa imi fac clasa vector
+friend istream &operator>>(istream &os1, Magistrala &m) {
+    os1 >> m.n >> m.nume_magistrala;
+    if (m.n > m.max_size) {
+        delete[] m.statii;
+        m.max_size = m.n;
+        m.statii = new Statie[m.max_size];
+    }
+    for (int i = 0; i < m.n; i++) {
+        os1 >> m.statii[i];
+    }
+    return os1;
+}
 };
 class Sistem{
   private:
@@ -222,15 +249,12 @@ class Sistem{
        ifstream f("statii_metrou.txt");
        int nr_statii;
        char temp_nume_magistrala[50], temp_nume_statie[50];
-       while(f>> nr_statii) {
-         f>>temp_nume_magistrala;
-         Magistrala temp(temp_nume_magistrala);
-         for(int i = 0; i < nr_statii; i++) {
-           f>>id>>temp_nume_statie;
-           temp.adaugareStatie(temp_nume_statie, id);
-         }
-        adaugareMagistrala(temp,nr_statii);
-       }
+       Statie tempStatie;
+       Magistrala tempMagistrala;
+
+       while(f >> tempMagistrala)
+        adaugareMagistrala(tempMagistrala,0);
+
        f.clear();
        f.close();
      }
@@ -506,7 +530,10 @@ int main() {
                   cout<<"1 Pentru pop_front, 2 Pentru pop_back"<<endl;
                   int op3;
                   cin>>op3;
-                  //de facut cod corect pentru chestia asta
+                  Magistrala *m = metrorex.getMagistrala(nume_magistrala);
+                  if(op3==1){
+                    m->delStatieFront();
+                  }
 
                 }
             }
