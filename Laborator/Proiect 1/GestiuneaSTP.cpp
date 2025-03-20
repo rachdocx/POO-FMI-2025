@@ -1,21 +1,14 @@
 #include <iostream>
-#include <fstream>
 #include <cstring>
+#include <vector>
+#include <fstream>
 #include <unistd.h>
 #include <thread>
 #include <atomic>
-#include <vector>
-//de ce n am folosit stl uri de la inceput ma omor original
-//gestiunea sistemului de transport public proiect poo
-//de implementat clasa tren care parcuge statiile dintr o magistrala
-//de adaugat in clasa statie timpul care dureaza de la statia precedenta pana la statia respectiva
-//si sa simulez o parcurgere a trenului reala
-//de facut friend functions pt input si output
-//lowk terminat conceptual dar mai trb sa termin cerintele din enunt
-//de reparat incapsularea ptr adaugare statie
+#include <random>
+//am folosit si alocare dinamica si stl si
 using namespace std;
-int op, id;
-char  nume_magistrala[50], nume_statie[50], nume_tren[50];
+const int MAX_LENGHT=256;
 atomic<bool> stopLoop(false);
 void checkForExit() {
     string input;
@@ -27,586 +20,661 @@ void checkForExit() {
         }
     }
 }
-class Statie {
-private:
-    int id;
-    char nume[50];
-public:
-    Statie() {
-        id=0;
-        strcpy(nume,"");
+class Station{
+  float distance;
+  char* station_name;
+  bool change;
+
+  const int station_id;
+  static int id_generator;
+  public:
+    Station(float distance = 0, const char* station_name = "N/A", bool change = false) : station_id(id_generator++){
+        this->distance = distance;
+        this->station_name = new char[strlen(station_name) + 1];
+        strcpy(this->station_name, station_name);
+        this->change = change;
     }
-    Statie(int id, const char nume[]) {
-        this->id=id;
-        strcpy(this->nume,nume);
+
+    Station(const Station& station) : station_id(id_generator++) {
+        this->distance = station.distance;
+        this->station_name = new char[strlen(station.station_name) + 1];
+        strcpy(this->station_name, station.station_name);
+        this->change = station.change;
     }
-    Statie(const Statie &s) {
-        this->id=s.id;
-        strcpy(this->nume,s.nume);
+
+    ~Station(){
+      delete[] station_name;
     }
-    Statie& operator=(const Statie &s) {
-        if (this != &s) {
-            this->id = s.id;
-            strcpy(this->nume, s.nume);
-        }
-        return *this;
+
+    float getDistance(){
+      return this->distance;
     }
-    int getId() {
-        return id;
+	char* getStationName(){
+          return this->station_name;
+	}
+	friend istream& operator>>(istream& in, Station& station){
+  		char temp_name[100];
+  		in >> station.distance >> temp_name >> station.change;
+  		delete[] station.station_name;
+  		station.station_name = new char[strlen(temp_name) + 1];
+  		strcpy(station.station_name, temp_name);
+  		return in;
+	}
+
+    friend ostream& operator<<(ostream& out, const Station& station){
+      out << station.distance << " " << station.station_name << " " << station.change;
+      return out;
     }
-    char *getNume() {
-      return nume;
+
+    Station& operator=(const Station& station){
+      if(this != &station) {  // Prevent self-assignment
+        this->distance = station.distance;
+        delete[] station_name;
+        this->station_name = new char[strlen(station.station_name) + 1];
+        strcpy(this->station_name, station.station_name);
+        this->change = station.change;
+      }
+      return *this;
     }
-    void print() {
-        cout<<this->nume;
-    }
-    void printFile(ofstream &f) {
-        f<<this->id<<" "<<this->nume<<endl;
-    }
-    friend istream &operator>>(istream &os, Statie &s1) {
-      os>>s1.id>>s1.nume;
-      return os;
+    void showStation(){
+      cout << distance << " " << station_name << " " << change << " " << station_id << endl;
     }
 };
-class Magistrala { //basically clasa vector de la tema, dar magistrala
-    private:
-    Statie *statii;
-    int n, max_size;
-    char nume_magistrala[50];
-    void moreData() {
-        Statie *temp= new Statie[max_size * 2];
-        for (int i = 0; i < max_size; i++) {
-            temp[i] = statii[i];
-        }
-        if(statii!=NULL)
-            delete []statii;
-        statii = temp;
-        max_size*=2;
-    }
+
+class Line{
+    vector<Station> stations;
+    float length;
+    int no_of_stations;
+    char line_name[50];
     public:
-     Magistrala() {
-         max_size=5;
-       statii = new Statie[max_size];
-       n=0;
-       strcpy(nume_magistrala,"");
-     }
-    Magistrala(const char nume[]) {
-        n = 0;
-        max_size = 5;
-        strcpy( this->nume_magistrala , nume);
-        statii=new Statie[max_size];
-    }
-    ~Magistrala() {
-        delete[] statii;
-        statii = NULL;
-    }
-    Magistrala& operator=(const Magistrala &other) {
-         if (this != &other) {
-             delete[] statii;
-             n = other.n;
-             max_size = other.max_size;
-             strcpy(nume_magistrala, other.nume_magistrala);
-             statii = new Statie[max_size];
-             for (int i = 0; i < n; i++) {
-                 statii[i] = other.statii[i];
-             }
-         }
-         return *this;
-     }
-    char *getNume() {
-      return nume_magistrala;
-    }
-    int getNr(){
-      return n;
+      Line(int no_of_stations = 0, float length = 0, const char* line_name = "N/A"){
+        this->length = length;
+        strcpy(this->line_name, line_name);
+        this->no_of_stations = no_of_stations;
       }
-    void adaugareStatie(const char nume[], int id) {
-        if (n>=max_size) {
-            moreData();
-        }
-          Statie temp1(id,nume);
-            statii[n]=temp1;
-            n++;
-    }
-    void adaugareStatie1(const Statie &s) {
-      if (n>=max_size) {
-        moreData();
-      }
-      statii[n]=s;
-      n++;
-    }
-    void adaugareStatieBack(const char nume[], int id) {
-      if (n>max_size) {
-        moreData();
-      }
-      Statie temp2(id,nume);
-      for (int i = n; i > 0; i--) {
-        statii[i] = statii[i-1];
-      }
-      statii[0] = temp2;
-      n++;
-    }
-    void delStatieFront(){
-     	if(n>0)
-          n--;
-     }
-    void afisStatii() {
-        for (int i = 0; i < n; i++) {
-            statii[i].print();
-            cout<<endl;
-        }
-    }
-    void afisStatie(int i) {
-      statii[i].print();
-    }
-    Statie getStatie(int id) {
-        for (int i = 0; i < n; i++) {
-            if (statii[i].getId()==id) {
-                return statii[i];
-            }
-        }
-        return statii[0];
-    }
-    void delStatie(int id) {
-        for (int i = 0; i < n; i++) {
-            if (statii[i].getId()==id) {
-                for (int j = i; j < n; j++) {
-                    statii[j] = statii[j+1];
-                }
-                --n;
-            }
-        }
-    }
-/*    void loadStatii() {
-        ifstream f("statii_metrou.txt");
-        char temp[50];
-        f>>temp;
-        strcpy(nume_magistrala,temp);
-        while (f >> id) {
-            f>>nume;
-            adaugareStatie(nume,id);
-        }
-        f.clear();
-        f.close();
-    }*/
-    void saveStatii(ofstream &f) {
-        for (int i = 0; i <n; i++) {
-            f<<statii[i].getId()<<" "<<statii[i].getNume()<<endl;
-        }
-    }
-    //o sa ma bantuie tot proiectul ca m am incapatanat eu sa imi fac clasa vector
-friend istream &operator>>(istream &os1, Magistrala &m) {
-    os1 >> m.n >> m.nume_magistrala;
-    if (m.n > m.max_size) {
-        delete[] m.statii;
-        m.max_size = m.n;
-        m.statii = new Statie[m.max_size];
-    }
-    for (int i = 0; i < m.n; i++) {
-        os1 >> m.statii[i];
-    }
-    return os1;
-}
-};
-class Sistem{
-  private:
-    Magistrala *magistrale;
-    int n, max_size;
-    char nume_sistem[50];
-    void moreData() {
-      Magistrala *temp= new Magistrala[max_size * 2];
-      for (int i = 0; i < max_size; i++) {
-        temp[i] = magistrale[i];
-      }
-      delete [] magistrale;
-      magistrale = temp;
-      max_size*=2;
-    }
-   public:
-     Sistem() {
-       max_size=5;
-       magistrale = new Magistrala[max_size];
-       strcpy(nume_sistem,"");
-       n=0;
-     }
-     Sistem(const char nume[]) {
-       n = 0;
-       max_size = 5;
-       strcpy( this->nume_sistem, nume);
-       magistrale=new Magistrala[max_size];
-     }
-     ~Sistem() {
-       delete[] magistrale;
-       magistrale = NULL;
-     }
-     void adaugareMagistrala(const Magistrala &ob, int nr_statii) {
-       if (n>=max_size) {
-           moreData();
-       }
-       magistrale[n]=ob;
-       ++n;
-     }
-     void loadMagistrale(){
-       ifstream f("statii_metrou.txt");
-       int nr_statii;
-       char temp_nume_magistrala[50], temp_nume_statie[50];
-       Statie tempStatie;
-       Magistrala tempMagistrala;
 
-       while(f >> tempMagistrala)
-        adaugareMagistrala(tempMagistrala,0);
+      ~Line(){
+        stations.clear();
+      }
 
-       f.clear();
-       f.close();
-     }
-     void saveMagistrale(){
-       ofstream f("statii_metrou.txt");
-       for (int i = 0; i <n; i++) {
-         f<<magistrale[i].getNr()<<' '<<magistrale[i].getNume()<<endl;
-         magistrale[i].saveStatii(f);
-       }
-     }
-     void afisMagistrale(){
-       for (int i = 0; i < n; i++) {
-         cout<<magistrale[i].getNr()<<" "<<magistrale[i].getNume()<<endl;
-         magistrale[i].afisStatii();
-         cout<<endl;
-       }
-     }
-    Magistrala* getMagistrala(const char nume[]) {
-         for (int i = 0; i < n; i++) {
-             if (strcmp(magistrale[i].getNume(), nume) == 0) {
-                 return &magistrale[i];
-             }
-         }
-         return nullptr;
-     }
-     void deleteMagistralaByname(const char nume[]) {
-       for (int i = 0; i < n; i++) {
-         if (strcmp(magistrale[i].getNume(), nume) == 0) {
-           for (int j = i; j < n-1; j++) {
-             magistrale[j] = magistrale[j+1];
-           }
-         }
-       }
-       --n;
-         Magistrala *temp = new Magistrala[max_size];
-         for (int k = 0; k < n; k++) {
-             temp[k] = magistrale[k];
-         }
-         delete[] magistrale;
-         magistrale = temp;
-         return;
-     }
-};
-class Tren{
-private:
-    int id, cap_maxima;
-    char nume[50], num_magistrala[50];
-    float viteza_medie;
-public:
-    Tren(){
-        strcpy(num_magistrala, "");
-        cap_maxima = 0;
-        id = 0;
-        viteza_medie = 0;
-        strcpy(nume, "");
-    }
-    Tren(int id, int cap_maxima, const char *nume, const char *num_magistrala, float viteza_medie){
-        this->id = id;
-        this->cap_maxima = cap_maxima;
-        strcpy(this->nume, nume);
-        strcpy(this->num_magistrala, num_magistrala);
-        this->viteza_medie = viteza_medie;
-    }
-    void setTren(Sistem &sistem){
-      	//lowk foarte glitchuita functie
-      	Magistrala *temp = sistem.getMagistrala(this->num_magistrala);
-        thread inputThread(checkForExit);
-        while(!stopLoop){
-        cout<<"Trenul cu directia: ";
-        temp->afisStatie(temp->getNr()-1);
-        cout<<" pleaca de la:"<<endl;
-		for (int i = 0; i < temp->getNr() ; i++) {
-        	temp->afisStatie(i);
-            cout<<endl;
-            sleep(3);
-            cout<<"Trenul a ajuns la:"<<endl;
-            if(stopLoop){
-             	inputThread.join();
-              return;
-            }
-		}
-        cout<<"Trenul intoarce la: ";
-        temp->afisStatie(temp->getNr()-1);
-        cout<<" si pleaca catre: ";
-        temp->afisStatie(0);
-        cout<<endl;
-        cout<<"Trenul cu directia: ";
-        temp->afisStatie(0);
-        cout<<" pleaca de la:"<<endl;
-        for (int i = temp->getNr()-1 ; i >0 ; i--) {
-          temp->afisStatie(i);
-          cout<<endl;
-          sleep(3);
-          cout<<"Trenul a ajuns la:"<<endl;
-          if(stopLoop){
-            inputThread.join();
-            return;
+      Line& operator=(const Line& line){
+        if(this != &line) {  // Prevent self-assignment
+          this->length = line.length;
+          strcpy(this->line_name, line.line_name);
+          this->no_of_stations = line.no_of_stations;
+          for(int i = 0; i < line.no_of_stations; i++){
+            this->stations.push_back(line.stations[i]);
+            this->no_of_stations++;
           }
         }
-        temp->afisStatie(0);
-        cout<<endl;
+        return *this;
+      }
+      int getNoOfStations(){
+        return this->no_of_stations;
+      }
+      Line(const Line& line){
+        this->length = line.length;
+        strcpy(this->line_name, line.line_name);
+        this->no_of_stations = line.no_of_stations;
+        stations = line.stations;  // Copy the stations
+      }
+
+      void addStationBack(const Station& station){
+        stations.push_back(station);
+		no_of_stations++;
+      }
+
+      void addStationFront(const Station& station){
+        stations.insert(stations.begin(), station);
+        no_of_stations++;
+      }
+	  void deleteStationBack(){
+            stations.pop_back();
+            no_of_stations--;
+	  }
+      void deleteStationFront(){
+        stations.erase(stations.begin());
+        no_of_stations--;
+      }
+      void printLine(){
+        for(size_t i = 0; i < stations.size(); i++){
+          cout<<stations[i];
+          cout<<endl;
+        }
+      }
+    //overloading the '+' operator
+      char* getLineName(){
+        return line_name;
+      }
+     float getStationDistance(char* station_name){
+       for(int i = 0; i < stations.size(); i++){
+         if(strcmp(station_name, stations[i].getStationName()) == 0){
+           return stations[i].getDistance();
+         }
+       }
+       return 0;
+     }
+     Station getStationBack(){
+       return stations.back();
+     }
+     Station getStationFront(){
+       return stations.front();
+     }
+     char* getDirection(){
+       return stations[stations.size()-1].getStationName();
+     }
+     void showStations(int i){
+       cout<<stations[i].getStationName();
+     }
+  Station getStation(int i){
+        return stations[i];
+      }
+	friend Line operator+(Line &a, Station b){
+          a.length += b.getDistance();
+          return a;
+	}
+    //overloading the '-' operator
+    friend Line operator-(Line &a, Station b){
+      a.length -= b.getDistance();
+      return a;
+    }
+     friend istream& operator>>(istream& in, Line& line){
+		in>>line.no_of_stations>>line.line_name>>line.length;
+        line.stations.clear();
+        for(int i = 0; i < line.no_of_stations; i++){
+          Station station;
+          in>>station;
+          line.stations.push_back(station);
+
+        }
+        return in;
+     }
+     friend ostream& operator<<(ostream& out, const Line& line){
+       out<<line.no_of_stations<<' '<<line.line_name<<' '<<line.length<<endl;
+       for(int i = 0; i < line.no_of_stations; i++){
+         out<<line.stations[i]<<endl;
+       }
+       return out;
+     }
+};
+class System{
+  char *system_name;
+  float trip_price;
+  vector<Line> lines;
+public:
+System(const char *system_name="N/A", float trip_price = 0){
+    this->system_name = new char[strlen(system_name) + 1];
+    strcpy(this->system_name, system_name);
+    this->trip_price = trip_price;
+}
+  System(const System& system){
+    if(this->system_name != nullptr){
+      delete[] this->system_name;
+    }
+    this->system_name = new char[strlen(system.system_name) + 1];
+    strcpy(this->system_name, system.system_name);
+    this->trip_price = system.trip_price;
+  }
+  ~System(){
+    if(this->system_name != nullptr){
+      delete[] this->system_name;
+    }
+  }
+  void addLine(const char name[50]){
+    Line line(0, 0, name);
+    lines.push_back(line);
+  }
+  Line getLine(char* name){
+    for(int i = 0; i < lines.size(); i++){
+      if(strcmp(name, lines[i].getLineName()) == 0){
+          cout<<lines[i];
+          return lines[i];
+      }
+    }
+    return Line();
+  }
+  void deleteLine(char name[]){
+    for(int i = 0; i < lines.size(); i++){
+      if(!strcmp(name, lines[i].getLineName())){
+        lines.erase(lines.begin() + i);
+        break;
+      }
+    }
+  }
+  void addToLineBack(const Station& station, char name[50]){
+    for(int i = 0; i < lines.size(); i++){
+      if(!strcmp(lines[i].getLineName(), name)){
+        lines[i].addStationBack(station);
+       	lines[i] = lines[i] + station;
+        return;
+      }
+    }
+  }
+  void deleteFromLineBack(char name[50]){
+    for(int i = 0; i < lines.size(); i++){
+      if(!strcmp(lines[i].getLineName(), name)){
+        Station temp = lines[i].getStationBack();
+        lines[i].deleteStationBack();
+        lines[i] = lines[i] - temp;
+        return;
+      }
+    }
+  }
+  void deleteFromLineFront(char name[50]){
+    for(int i = 0; i < lines.size(); i++){
+      if(!strcmp(lines[i].getLineName(), name)){
+        Station temp = lines[i].getStationFront();
+        lines[i].deleteStationFront();
+        lines[i] = lines[i] - temp;
+        return;
+      }
+    }
+  }
+  void addToLineFront(const Station& station, char name[50]){
+    for(int i = 0; i < lines.size(); i++){
+      if(!strcmp(lines[i].getLineName(), name)){
+        lines[i].addStationFront(station);
+        lines[i] = lines[i] + station;
+        return;
+      }
+    }
+  }
+
+  System& operator=(const System& system){
+    if(this->system_name != nullptr){
+      delete[] this->system_name;
+    }
+    this->system_name = new char[strlen(system.system_name) + 1];
+    strcpy(this->system_name, system.system_name);
+    this->trip_price = system.trip_price;
+    return *this;
+  }
+  friend ostream& operator<<(ostream& out, const System& system){
+	out<<system.system_name<<' '<<system.trip_price<<endl;
+    for(int i = 0; i < system.lines.size(); i++){
+      out<<system.lines[i]<<endl;
+    }
+    return out;
+  }
+  friend istream& operator>>(istream& in, System& system){
+    if(system.system_name != nullptr) {
+        delete[] system.system_name;
+    }
+    char temp_name[100];
+    in>>temp_name>>system.trip_price;
+    system.system_name = new char[strlen(temp_name) + 1];
+    strcpy(system.system_name, temp_name);
+	system.lines.clear();
+    Line temp;
+    while(in>>temp){
+      system.lines.push_back(temp);
+    }
+    return in;
+  }
+	void loadSystem(){
+    	ifstream f("system.txt");
+    	f >> *this;
+        f.clear();
+    	f.close();
+	}
+	void saveSystem(){
+    	ofstream f("system.txt");
+        f << *this;
+        f.clear();
+        f.close();
+	}
+};
+class Train{
+  char *train_name;
+  float average_spped;
+  char* assigned_line;
+  int max_capacity;
+  int actual_capacity;
+  public:
+    Train(const char* train_name = "N/A", int average_speed=-1,const char* assigned_line= "N/A", int max_capacity=-1, int actual_capacity=0){
+		this->train_name = new char[strlen(train_name) + 1];
+        strcpy(this->train_name, train_name);
+        this->average_spped = average_speed;
+        this->assigned_line = new char[strlen(assigned_line) + 1];
+        strcpy(this->assigned_line, assigned_line);
+        this->max_capacity = max_capacity;
+        this->actual_capacity = actual_capacity;
+    }
+    Train(const Train& train){
+      this->train_name = new char[strlen(train.train_name) + 1];
+      strcpy(this->train_name, train.train_name);
+      this->average_spped = train.average_spped;
+      this->assigned_line = new char[strlen(train.assigned_line) + 1];
+      strcpy(this->assigned_line, train.assigned_line);
+      this->max_capacity = train.max_capacity;
+      this->actual_capacity = train.actual_capacity;
+    }
+    ~Train(){
+      delete[] train_name;
+      delete[] assigned_line;
+    }
+   Train &operator=(const Train& train){
+  if(this != &train) {
+    if(this->train_name != nullptr){
+      delete[] this->train_name;
+    }
+    this->train_name = new char[strlen(train.train_name) + 1];
+    strcpy(this->train_name, train.train_name);
+
+    if(this->assigned_line != nullptr){
+      delete[] this->assigned_line;
+    }
+    this->assigned_line = new char[strlen(train.assigned_line) + 1];
+    strcpy(this->assigned_line, train.assigned_line);
+
+    this->average_spped = train.average_spped;
+    this->max_capacity = train.max_capacity;
+    this->actual_capacity = train.actual_capacity;
+  }
+  return *this;
+}
+    friend ostream& operator<<(ostream& out, const Train& train){
+      out<<train.train_name << " ";
+      out<<train.assigned_line << " ";
+      out<<train.average_spped << " " ;
+      out<<train.max_capacity << " ";
+      out<<train.actual_capacity << " ";
+      return out;
+    }
+    friend istream& operator>>(istream& in, Train& train){
+      in>>train.train_name>>train.assigned_line>>train.average_spped>>train.max_capacity>>train.actual_capacity;
+      return in;
+    }
+    void changeLine(char* line){
+      strcpy(assigned_line, line);
+    }
+    float getTime(Station station)
+    {
+      return station.getDistance() * 100 / this->average_spped;
+    }
+    char* getName(){
+      return this->train_name;
+    }
+    //urmeaza cea mai oribila functie din lume
+    void setTren(System &system){
+        Line temp_line = system.getLine(this->assigned_line);
+        temp_line.printLine();
+        thread inputThread(checkForExit);
+        random_device rd;
+        mt19937 gen(rd());
+        uniform_int_distribution<> dista(0, (this->max_capacity-1)/5);
+        int randomNumber = dista(gen);
+        uniform_int_distribution<> distb(0, randomNumber);
+        int randomNumber2 = distb(gen);
+        while(!stopLoop){
+          cout<<"The Train's direction is: "<<temp_line.getDirection()<<endl;
+          cout<<endl;
+          for(int i = 0; i < temp_line.getNoOfStations()-1; i++){
+            this->actual_capacity += randomNumber;
+            randomNumber = dista(gen);
+            cout<<"The train is leaving: ";
+            temp_line.showStations(i);
+            cout<<" and it will arrive at: ";
+            temp_line.showStations(i+1);
+            cout<<" in "<< getTime(temp_line.getStation(i));
+            cout<<". Train capacity is: "<<this->actual_capacity<<endl;
+            int smth = getTime(temp_line.getStation(i));
+            sleep(smth);
+            if(stopLoop){
+              inputThread.join();
+              return;
+            }
+            uniform_int_distribution<> distb(0, this->actual_capacity);
+            randomNumber2 = distb(gen);
+            this->actual_capacity -= randomNumber2;
+
+          }
+          cout<<"The Train arrived at: ";
+          temp_line.showStations(temp_line.getNoOfStations()-1);
+          cout<<" and is returning to: ";
+          temp_line.showStations(0);
+          cout<<endl;
+          cout<<endl<<"The Train's direction is: ";
+          temp_line.showStations(0);
+          cout<<endl<<endl;
+          for(int i = temp_line.getNoOfStations()-1; i >0 ; i--){
+            cout<<"The train is leaving: ";
+            temp_line.showStations(i);
+            cout<<" and it will arrive at: ";
+            temp_line.showStations(i-1);
+            cout<<" in "<< getTime(temp_line.getStation(i-1))<<endl;
+            int smth = getTime(temp_line.getStation(i-1));
+            sleep(smth);
+            if(stopLoop){
+              inputThread.join();
+              return;
+            }
+          }
+          cout<<"The Train arrived at: ";
+          temp_line.showStations(0);
+          cout<<" and is returning to: ";
+          temp_line.showStations(temp_line.getNoOfStations()-1);
+          cout<<endl<<endl;
+
         }
         stopLoop = false;
         inputThread.join();
     }
-    void schimbareMagistrala(const char nume[]){
-      strcpy(num_magistrala, nume);
-    }
-    void saveTren(){
-      ofstream f("trenuri.txt");
-      f<<id<<' '<<cap_maxima<<' '<<this->nume<<' '<<num_magistrala<<' '<<viteza_medie<<endl;
-    }
-    char * getNume(){
-      return nume;
-    }
-    friend istream& operator>>(istream& in, Tren& t) {
-        in >> t.id;
-        in >> t.nume;
-        in >> t.num_magistrala;
-        in >> t.cap_maxima;
-        in >> t.viteza_medie;
-        return in;
-    }
-        friend ostream& operator<<(ostream& out, const Tren& t) {
-        out << t.id << " " << t.nume << " " << t.num_magistrala<< " " << t.cap_maxima << " " << t.viteza_medie << " ";
-        return out;
-    }
 };
-class Depou{
-  private:
-    char nume[50];
-    int nr;
-    vector<Tren> trenuri;
+class Depot{
+  char *depot_name;
+  Train* trains;
+  int no_of_trains;
   public:
-    Depou(){
-      strcpy(nume, "");
-      nr = 0;
-      trenuri.clear();
+    Depot(const char* depot_name = "N/A" , int no_of_trains = 0){
+      this->depot_name = new char[strlen(depot_name) + 1];
+      strcpy(this->depot_name, depot_name);
+      this->no_of_trains = no_of_trains;
+      trains = new Train[MAX_LENGHT];
     }
-    Depou(const char nume1[]){
-      strcpy(nume, nume1);
-      nr = 0;
-      trenuri.clear();
+    ~Depot(){
+      delete[] trains;
+      delete [] depot_name;
     }
-    ~Depou(){
-      trenuri.clear();
+    Depot(const Depot& depot){
+      if (depot.depot_name != nullptr){
+        delete[] depot_name;
+      }
+      if (depot.trains != nullptr){
+        delete[] depot.trains;
+      }
+      this->depot_name = new char[strlen(depot.depot_name) + 1];
+      strcpy(this->depot_name, depot.depot_name);
+      this->no_of_trains = depot.no_of_trains;
+      trains = new Train[MAX_LENGHT];
     }
-    void loadTrenuri(){
-    ifstream f("trenuri.txt");
-    Tren temp;
-    while(f>>temp){
-      trenuri.push_back(temp);
+    friend ostream& operator<<(ostream& out, const Depot& depot){
+      out<<depot.depot_name << " "<<depot.no_of_trains<<" "<<endl;
+      for (int i = 0; i < depot.no_of_trains; i++) {
+        out<<depot.trains[i]<<endl;
+      }
+      return out;
     }
-    f.close();
+    friend istream& operator>>(istream& in, Depot& depot){
+      in>>depot.depot_name>>depot.no_of_trains;
+      for (int i = 0; i < depot.no_of_trains; i++) {
+        in>>depot.trains[i];
+      }
+      return in;
     }
-    void afisTrenuri(){
-      for (int i = 0; i < trenuri.size(); i++) {
-        cout<<trenuri[i]<<endl;
+    void changeLine(char name[50], char line_name[50]){
+      for (int i = 0; i < no_of_trains; i++) {
+        if(strcmp(trains[i].getName(), name) == 0){
+          trains[i].changeLine(line_name);
+          return;
+        }
       }
     }
-    void saveTrenuri(){
-      ofstream f("trenuri.txt");
-      for(int i = 0; i < trenuri.size(); i++){
-        f<<trenuri[i]<<endl;
+    Train getTrain(char nume[]){
+      for(int i = 0; i < no_of_trains; i++){
+        if(strcmp(trains[i].getName(), nume) == 0){
+          return trains[i];
+        }
       }
+      return Train();
+    }
+    void addTrain(Train train){
+      trains[no_of_trains] = train;
+      no_of_trains++;
+    }
+    void loadDepot(){
+      ifstream f("depot.txt");
+      f>>*this;
+      f.clear();
       f.close();
     }
-    void addTrenuri(Tren &trenuri1){
-      trenuri.push_back(trenuri1);
-    }
-    Tren getTren(char nume1[]){
-      for(int i = 0; i < trenuri.size(); i++){
-        if(strcmp(nume1, trenuri[i].getNume()) == 0){
-          return trenuri[i];
-        }
-      }
-    }
-    Tren* getTren1(const char nume[]) {
-        for (int i = 0; i < trenuri.size(); i++) {
-            if (trenuri[i].getNume() == nume) {
-                return &trenuri[i];  // Returnăm adresa trenului găsit
-            }
-        }
-        return nullptr;  // Returnăm nullptr dacă nu găsim trenul
-    }
-    void schimbareMagistrala(const char nume[], const char numeMag[]){
-        for (int i = 0; i < trenuri.size(); i++) {
-          if(strcmp(nume, trenuri[i].getNume()) == 0){
-               trenuri[i].schimbareMagistrala(numeMag);
-               return;
-          }
-        }
-    }
-    void deleteTrenByName(const char nume[]){
-      for (int i = 0; i < trenuri.size(); i++) {
-        if(strcmp(nume, trenuri[i].getNume()) == 0){
-          trenuri.erase(trenuri.begin() + i);
-        }
-      }
+    void saveDepot(){
+      ofstream f("depot.txt");
+      f<<*this;
+      f.clear();
+      f.close();
     }
 };
+int Station::id_generator = 0;
+int option, option1, option2;
+float average_spped_global;
+char global_station_name[50], global_line_name[50], global_train_name[50];
 int main() {
-    Sistem metrorex;
-    Depou trenuriMetrorex;
-    trenuriMetrorex.loadTrenuri();
-    metrorex.loadMagistrale();
-    int optiune;
-    cout<<"1. Pentru Gestiunea Magistralelor"<<endl;
-    cout<<"2. Pentru Gestiunea Trenurilor"<<endl;
-    cout<<"0. Pentru iesirea din aplicatie"<<endl;
-    cin>>optiune;
-    while(optiune!=0){
-      switch(optiune){
-        case 1:
-          cout<<"1 Pentru adaugare statie"<<endl;
-          cout<<"2. Pentru adaugare magistrala"<<endl;
-          cout<<"3. Pentru afisarea sistemului"<<endl;
-          cout<<"4. Pentru a sterge o magistrala"<<endl;
-          cout<<"5. Pentru a sterge o statie"<<endl;
-          cout<<"0. Pentru a te intoarce"<<endl;
-          cin>>op;
-          while(op!=0){
-            switch(op){
-                case 1:{
-                    cout<<"Introduceti numele magistralei unde vreti sa introduceti statia"<<endl;
-                    cin>>nume_magistrala;
-                    cout<<"Introduceti numele statiei"<<endl;
-                    cin>>nume_statie;
-                    cout<<"Introduceti ID-ul statiei"<<endl;
-                    cin>>id;
-                    int op1;
-                    cout<<"1 Pentru push_front, 2 Pentru push_back"<<endl;
-                    cin>>op1;
-                    Magistrala *m = metrorex.getMagistrala(nume_magistrala);
-                    if(op1==1){
-                      if(m)
-                        m->adaugareStatie(nume_statie,id);
-                      else
-                        cout<<"Magistrala nu a fost gasita"<<endl;
-                    }
-                    else if(op1==2){
-                      if(m)
-                        m->adaugareStatieBack(nume_statie,id);
-                      else
-                        cout<<"Magistrala nu a fost gasita"<<endl;
-                    }
-                }
-                break;
-                case 2:{
-                  cout<<"Introduceti numele magistralei"<<endl;
-                  cin>>nume_magistrala;
-                  Magistrala temp2(nume_magistrala);
-                  metrorex.adaugareMagistrala(temp2, 0);
+  System metrorex;
+  Depot depoul1;
+  Line temp_line;
 
-                }
-                break;
-                case 3:{
-                  metrorex.afisMagistrale();
+  metrorex.loadSystem();
+  depoul1.loadDepot();
+  temp_line = metrorex.getLine("Viena");
+  cout<<temp_line<<endl;
+  cout<<"1. For managing the Lines"<<endl;
+  cout<<"2. For managing the Trains"<<endl;
+  cout<<"0 To exit the program"<<endl;
+  cin>>option;
+  while(option != 0){
+    switch(option){
+      case 1:{
+        cout<<"1. For showing the System"<<endl;
+        cout<<"2. For adding a station"<<endl;
+        cout<<"3. For adding a line"<<endl;
+        cout<<"4. For deleting a station"<<endl;
+        cout<<"5. For deleting a line"<<endl;
+        cout<<"0 to go back"<<endl;
+        cin>>option1;
+        while(option1 != 0){
+        	switch(option1){
+                  case 1:{
+                    cout<<metrorex;
+                    break;
+                  }
+                  case 2:{
+                    cout<<"Insert the Line where you're looking to add the Station"<<endl;
+                    cin>>global_line_name;
+                    Station station;
+                    cout<<"Insert the Station distace, name and boolean value for change"<<endl;
+                    cin>>station;
+                    cout<<"Insert 1 for push_back, 2 for push_front"<<endl;
+                    cin>>option2;
+                    if(option2 == 1){
+                      metrorex.addToLineBack(station,global_line_name);
+                    }
+                    else if(option2 == 2){
+                      metrorex.addToLineFront(station,global_line_name);
+                    }
+                    break;
+               		//de adaugat else optiune gresita
+                  }
+                  case 3:{
+                    cout<<"Insert Line's name"<<endl;
+                    cin>>global_line_name;
+                    metrorex.addLine(global_line_name);
+                    break;
+                  }
+                  case 4:{
+                    cout<<"Attention! In a subway system you can only delete the first or last station!"<<endl;
+                    cout<<"Insert the Line's name"<<endl;\
+ 					cin>>global_line_name;
+                    cout<<"1. For pop_back, 2. For pop_front"<<endl;
+ 					cin>>option2;
+                    if(option2 == 1){
+                      metrorex.deleteFromLineBack(global_line_name);
+                    }
+                    else if(option2 == 2){
+                      metrorex.deleteFromLineFront(global_line_name);
+                    }
+                    break;
+                  }
+                  case 5:{
+                    cout<<"Insert Line's name"<<endl;
+                    cin>>global_line_name;
+                    metrorex.deleteLine(global_line_name);
+                    break;
+                  }
+        	}
+     		cout<<"1. For showing the System"<<endl;
+        	cout<<"2. For adding a station"<<endl;
+        	cout<<"3. For adding a line"<<endl;
+            cout<<"4. For deleting a station"<<endl;
+            cout<<"5. For deleting a line"<<endl;
+        	cout<<"0 to go back"<<endl;
+            cin>>option1;
+        }
+        break;
+      }
+      case 2:{
+			cout<<"1. For showing the Trains"<<endl;
+            cout<<"2. To assign other line to a Train"<<endl;
+            cout<<"3. To add a train in the Depot"<<endl;
+            cout<<"4. To focus on a train's ride"<<endl;
+            cout<<"0. For going back"<<endl;
+            cin>>option1;
+            while(option1 != 0){
+              switch(option1){
+                case 1:{
+					cout<<depoul1;
                     break;
                 }
-                case 4:{
-                  cout<<"Introduceti numele magistralei de sters!"<<endl;
-                  cin>>nume_magistrala;
-                  metrorex.deleteMagistralaByname(nume_magistrala);
+                case 2:{
+                  cout<<"Insert the Train you are looking for"<<endl;
+                  cin>>global_train_name;
+                  cout<<"Insert the Line name"<<endl;
+                  cin>>global_line_name;
+                  depoul1.changeLine(global_train_name,global_line_name);
                   break;
                 }
-                case 5:{
-                  cout<<"Atentie! Stergerea statiilor se face de la capetele magistralei"<<endl;
-                  cout<<"Introduceti numele magistralei unde se afla statia de sters"<<endl;
-                  cin>>nume_magistrala;
-                  cout<<"Introduceti numele statiei de sters"<<endl;
-                  cin>>nume_statie;
-                  cout<<"1 Pentru pop_front, 2 Pentru pop_back"<<endl;
-                  int op3;
-                  cin>>op3;
-                  Magistrala *m = metrorex.getMagistrala(nume_magistrala);
-                  if(op3==1){
-                    m->delStatieFront();
-                  }
-
+                case 3:{
+                  cout<<"Insert Train's name, assigned Line's name, Average Speed and Maximum Capacity and Curent Capacity"<<endl;
+                  Train temp_train;
+				  cin>>temp_train;
+                  depoul1.addTrain(temp_train);
                 }
-            }
-              cout<<"1. Pentru adaugare statie"<<endl;
-              cout<<"2. Pentru adaugare magistrala"<<endl;
-              cout<<"3. Pentru afisarea sistemului"<<endl;
-              cout<<"4. Pentru a sterge o magistrala"<<endl;
-              cout<<"5. Pentru a sterge o statie"<<endl;
-              cout<<"0. Pentru a te intoarce"<<endl;
-              cin>>op;
-          }
-
-      break;
-      case 2:
-        cout<<"1. Afisarea tuturor trenurilor"<<endl;
-        cout<<"2. Vizualizarea traseului unui tren"<<endl;
-        cout<<"3. Pentru adaugarea unui tren"<<endl;
-        cout<<"4. Pentru a muta trenul pe alta magistrala"<<endl;
-        cout<<"5. Pentru a sterge un tren"<<endl;
-        cout<<"0. Pentru a te intoare"<<endl;
-        cin>>op;
-        while(op!=0){
-          switch(op){
-            case 1:
-              trenuriMetrorex.afisTrenuri();
-              break;
-            case 2:{
-              cout<<"Introduceti numele trenului"<<endl;
-              cin>>nume_tren;
-              Tren temp = trenuriMetrorex.getTren(nume_tren);
-              stopLoop = false;
-              temp.setTren(metrorex);
-              break;
-            }
-            case 3:{
-              cout<<"Introduceti ID-ul, Numele, Magistrala, Capacitatea si Viteza trenului"<<endl;
-              Tren temp1;
-              cin>>temp1;
-
-              trenuriMetrorex.addTrenuri(temp1);
-              break;
-            }
-            case 4:{
-              cout<<"Introduceti numele trenului care trebuie mutat"<<endl;
-              cin>>nume_tren;
-              cout<<"Introduceti magistrala unde trebuie mutat"<<endl;
-              cin>>nume_magistrala;
-
-              trenuriMetrorex.schimbareMagistrala(nume_tren, nume_magistrala);
-              //eroare bombastica help SEG FAULT GRAHHH
-            }
-              case 5:{
-                cout<<"Introdu numele trenului:"<<endl;
-                cin>>nume_tren;
-                trenuriMetrorex.deleteTrenByName(nume_tren);
+                case 4:{
+                  cout<<"Insert name of the Train you are looking for"<<endl;
+                  cin>>global_train_name;
+                  Train temp_train = depoul1.getTrain(global_train_name);
+                  //cout<<temp_train;
+                  stopLoop = false;
+                  temp_train.setTren(metrorex);
+                  break;
+                }
               }
-          }
-            cout<<"1. Afisarea tuturor trenurilor"<<endl;
-            cout<<"2. Vizualizarea traseului unui tren"<<endl;
-            cout<<"3. Pentru adaugarea unui tren"<<endl;
-            cout<<"4. Pentru a muta trenul pe alta magistrala"<<endl;
-            cout<<"5. Pentru a sterge un tren"<<endl;
-            cout<<"0. Pentru a te intoarce"<<endl;
-            cin>>op;
-        }
-      break;
+      		cout<<"1. For showing the Trains"<<endl;
+            cout<<"2. To assign other line to a Train"<<endl;
+            cout<<"3. To add a train in the Depot"<<endl;
+            cout<<"4. To focus on a Train's ride"<<endl;
+            cout<<"0. For going back"<<endl;
+            cin>>option1;
+            }
+        break;
       }
-        cout<<"1. Pentru Gestiunea Magistralelor"<<endl;
-        cout<<"2. Pentru Gestiunea Trenurilor"<<endl;
-        cout<<"0. Pentru iesirea din aplicatie"<<endl;
-        cin>>optiune;
     }
-    metrorex.saveMagistrale();
-    trenuriMetrorex.saveTrenuri();
-    return 0;
+   	cout<<"1. For managing the Lines"<<endl;
+  	cout<<"2. For managing the Trains"<<endl;
+  	cout<<"0 To exit the program"<<endl;
+    cin>>option;
+  }
+  metrorex.saveSystem();
+  depoul1.saveDepot();
+  return 0;
 }
