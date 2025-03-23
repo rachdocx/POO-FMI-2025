@@ -6,7 +6,7 @@ class Stiva{
     int x;
     Nod* next;
 
-    Nod(int val, Nod* nxt = nullptr) {
+    Nod(int val, Nod* nxt = NULL) {
       x = val;
       next = nxt;
     }

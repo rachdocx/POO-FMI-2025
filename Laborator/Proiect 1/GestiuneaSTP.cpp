@@ -6,8 +6,18 @@
 #include <thread>
 #include <atomic>
 #include <random>
-//am folosit si alocare dinamica si stl si
+#include <chrono>
+#include <ctime>
+#include <iomanip>
+//am folosit si alocare dinamica si stl si vectori statici
 using namespace std;
+using namespace chrono;
+void addMinutesAndDisplay(int minutesToAdd) {
+    auto now = system_clock::now();
+    auto future_time = now + minutes(minutesToAdd);
+    time_t future_c = system_clock::to_time_t(future_time);
+    cout << put_time(localtime(&future_c), "%H:%M:%S");
+}
 const int MAX_LENGHT=256;
 atomic<bool> stopLoop(false);
 void checkForExit() {
@@ -27,6 +37,8 @@ class Station{
 
   const int station_id;
   static int id_generator;
+  //nu prea merge treaba cu generatul de id uri ptr ca de-a lunugul proiecteului mai
+	//generez statii temporare auxiliare si se baga peste id-ul celor care exista pe magistrale
   public:
     Station(float distance = 0, const char* station_name = "N/A", bool change = false) : station_id(id_generator++){
         this->distance = distance;
@@ -41,11 +53,9 @@ class Station{
         strcpy(this->station_name, station.station_name);
         this->change = station.change;
     }
-
     ~Station(){
       delete[] station_name;
     }
-
     float getDistance(){
       return this->distance;
     }
@@ -67,7 +77,7 @@ class Station{
     }
 
     Station& operator=(const Station& station){
-      if(this != &station) {  // Prevent self-assignment
+      if(this != &station) {
         this->distance = station.distance;
         delete[] station_name;
         this->station_name = new char[strlen(station.station_name) + 1];
@@ -98,7 +108,7 @@ class Line{
       }
 
       Line& operator=(const Line& line){
-        if(this != &line) {  // Prevent self-assignment
+        if(this != &line) {
           this->length = line.length;
           strcpy(this->line_name, line.line_name);
           this->no_of_stations = line.no_of_stations;
@@ -116,7 +126,7 @@ class Line{
         this->length = line.length;
         strcpy(this->line_name, line.line_name);
         this->no_of_stations = line.no_of_stations;
-        stations = line.stations;  // Copy the stations
+        stations = line.stations;
       }
 
       void addStationBack(const Station& station){
@@ -154,6 +164,10 @@ class Line{
        }
        return 0;
      }
+//basically getStation()
+  Station& operator[](int index) {
+    return stations[index];
+      }
      Station getStationBack(){
        return stations.back();
      }
@@ -279,7 +293,9 @@ System(const char *system_name="N/A", float trip_price = 0){
       }
     }
   }
-
+  Line& operator[](int index) {
+    return lines[index];
+}
   System& operator=(const System& system){
     if(this->system_name != nullptr){
       delete[] this->system_name;
@@ -311,6 +327,17 @@ System(const char *system_name="N/A", float trip_price = 0){
     }
     return in;
   }
+  //preturile doar se scumpesc nu si scad, evident
+  System &operator++() {
+        trip_price++;
+        return *this;
+    }
+
+    System operator++(int) {
+        System temp = *this;
+        trip_price++;
+        return temp;
+    }
 	void loadSystem(){
     	ifstream f("system.txt");
     	f >> *this;
@@ -373,6 +400,16 @@ class Train{
   }
   return *this;
 }
+//checks if 2 trains are on the same line
+  bool operator==(const Train& other) const {
+      return strcmp(this->assigned_line, other.assigned_line) == 0;
+    }
+ //allows adding an integer to a train(to add passangers)
+  Train operator+(int passengers) {
+      Train temp = *this;
+      temp.actual_capacity += passengers;
+      return temp;
+    }
     friend ostream& operator<<(ostream& out, const Train& train){
       out<<train.train_name << " ";
       out<<train.assigned_line << " ";
@@ -391,11 +428,42 @@ class Train{
     float getTime(Station station)
     {
       return station.getDistance() * 100 / this->average_spped;
+      //nu este timpul real sau corect, este doar un exemplu la scala 1 minut = o secunda
     }
     char* getName(){
       return this->train_name;
     }
-    //urmeaza cea mai oribila functie din lume
+    // Operator de incrementare ++ (prefixat și postfixat)
+    Train &operator++() { // Prefixat
+        if (actual_capacity < max_capacity)
+            actual_capacity++;
+        return *this;
+    }
+
+    Train operator++(int) { // Postfixat
+        Train temp = *this;
+        if (actual_capacity < max_capacity)
+            actual_capacity++;
+        return temp;
+    }
+    // Operator de decrementare -- (prefixat și postfixat)
+    Train &operator--() {
+        if (actual_capacity > 0)
+            actual_capacity--;
+        return *this;
+    }
+
+    Train operator--(int) {
+        Train temp = *this;
+        if (actual_capacity > 0)
+            actual_capacity--;
+        return temp;
+    }// Operator de comparatie <, >, <=, >=
+    bool operator<(const Train &other) const { return this->average_spped < other.average_spped; }
+    bool operator>(const Train &other) const { return this->average_spped > other.average_spped; }
+    bool operator<=(const Train &other) const { return this->average_spped <= other.average_spped; }
+    bool operator>=(const Train &other) const { return this->average_spped >= other.average_spped; }
+    //urmeaza cea mai oribila si glitch uita functie din lume
     void setTren(System &system){
         Line temp_line = system.getLine(this->assigned_line);
         temp_line.printLine();
@@ -406,19 +474,22 @@ class Train{
         int randomNumber = dista(gen);
         uniform_int_distribution<> distb(0, randomNumber);
         int randomNumber2 = distb(gen);
+        int global_smth = 0;
         while(!stopLoop){
           cout<<"The Train's direction is: "<<temp_line.getDirection()<<endl;
           cout<<endl;
           for(int i = 0; i < temp_line.getNoOfStations()-1; i++){
             this->actual_capacity += randomNumber;
             randomNumber = dista(gen);
-            cout<<"The train is leaving: ";
+            int smth = getTime(temp_line[i]);
+            global_smth += smth+1;
+            cout << "The train is leaving: ";
             temp_line.showStations(i);
-            cout<<" and it will arrive at: ";
+            cout << " and it will arrive at: ";
             temp_line.showStations(i+1);
-            cout<<" in "<< getTime(temp_line.getStation(i));
-            cout<<". Train capacity is: "<<this->actual_capacity<<endl;
-            int smth = getTime(temp_line.getStation(i));
+            cout << " in "<< getTime(temp_line[i]) << " minutes at exactly: ";
+            addMinutesAndDisplay(global_smth);
+            cout << ". Train capacity is: " << this->actual_capacity<<endl;
             sleep(smth);
             if(stopLoop){
               inputThread.join();
@@ -438,12 +509,15 @@ class Train{
           temp_line.showStations(0);
           cout<<endl<<endl;
           for(int i = temp_line.getNoOfStations()-1; i >0 ; i--){
+            int smth = getTime(temp_line[i-1]);
+            global_smth+=smth+1;
             cout<<"The train is leaving: ";
             temp_line.showStations(i);
             cout<<" and it will arrive at: ";
             temp_line.showStations(i-1);
-            cout<<" in "<< getTime(temp_line.getStation(i-1))<<endl;
-            int smth = getTime(temp_line.getStation(i-1));
+            cout<<" in "<< getTime(temp_line[i-1])<<" minutes at exactly ";
+            addMinutesAndDisplay(global_smth);
+            cout<<endl;
             sleep(smth);
             if(stopLoop){
               inputThread.join();
@@ -488,6 +562,10 @@ class Depot{
       this->no_of_trains = depot.no_of_trains;
       trains = new Train[MAX_LENGHT];
     }
+    Train& operator[](int index) {
+      return trains[index];
+    }
+
     friend ostream& operator<<(ostream& out, const Depot& depot){
       out<<depot.depot_name << " "<<depot.no_of_trains<<" "<<endl;
       for (int i = 0; i < depot.no_of_trains; i++) {
@@ -519,8 +597,8 @@ class Depot{
       return Train();
     }
     void addTrain(Train train){
-      trains[no_of_trains] = train;
-      no_of_trains++;
+      trains[this->no_of_trains] = train;
+      this->no_of_trains++;
     }
     void loadDepot(){
       ifstream f("depot.txt");
@@ -542,12 +620,8 @@ char global_station_name[50], global_line_name[50], global_train_name[50];
 int main() {
   System metrorex;
   Depot depoul1;
-  Line temp_line;
-
   metrorex.loadSystem();
   depoul1.loadDepot();
-  temp_line = metrorex.getLine("Viena");
-  cout<<temp_line<<endl;
   cout<<"1. For managing the Lines"<<endl;
   cout<<"2. For managing the Trains"<<endl;
   cout<<"0 To exit the program"<<endl;
@@ -560,6 +634,7 @@ int main() {
         cout<<"3. For adding a line"<<endl;
         cout<<"4. For deleting a station"<<endl;
         cout<<"5. For deleting a line"<<endl;
+        cout<<"6. Increase the Ride Price by one"<<endl;
         cout<<"0 to go back"<<endl;
         cin>>option1;
         while(option1 != 0){
@@ -593,7 +668,7 @@ int main() {
                   }
                   case 4:{
                     cout<<"Attention! In a subway system you can only delete the first or last station!"<<endl;
-                    cout<<"Insert the Line's name"<<endl;\
+                    cout<<"Insert the Line's name"<<endl;
  					cin>>global_line_name;
                     cout<<"1. For pop_back, 2. For pop_front"<<endl;
  					cin>>option2;
@@ -611,13 +686,17 @@ int main() {
                     metrorex.deleteLine(global_line_name);
                     break;
                   }
+                  case 6:{
+                    metrorex++;
+                  }
         	}
      		cout<<"1. For showing the System"<<endl;
         	cout<<"2. For adding a station"<<endl;
         	cout<<"3. For adding a line"<<endl;
             cout<<"4. For deleting a station"<<endl;
             cout<<"5. For deleting a line"<<endl;
-        	cout<<"0 to go back"<<endl;
+        	cout<<"6. Increase the Ride Price by one"<<endl;
+        	cout<<"0 To go back"<<endl;
             cin>>option1;
         }
         break;
@@ -648,6 +727,7 @@ int main() {
                   Train temp_train;
 				  cin>>temp_train;
                   depoul1.addTrain(temp_train);
+                  break;
                 }
                 case 4:{
                   cout<<"Insert name of the Train you are looking for"<<endl;
