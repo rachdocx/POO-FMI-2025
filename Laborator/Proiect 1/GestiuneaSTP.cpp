@@ -10,6 +10,7 @@
 #include <ctime>
 #include <iomanip>
 //am folosit si alocare dinamica si stl si vectori statici
+//run with clang++ -std=c++17 -o GestiuneaSTP GestiuneaSTP.cpp
 using namespace std;
 using namespace chrono;
 void addMinutesAndDisplay(int minutesToAdd) {
@@ -31,7 +32,7 @@ void checkForExit() {
     }
 }
 class Station{
-  float distance;
+  float distance; //distanta fata de urmatoarea statie
   char* station_name;
   bool change;
 
@@ -46,7 +47,7 @@ class Station{
         strcpy(this->station_name, station_name);
         this->change = change;
     }
-
+	//constructor de copiere
     Station(const Station& station) : station_id(id_generator++) {
         this->distance = station.distance;
         this->station_name = new char[strlen(station.station_name) + 1];
