@@ -16,7 +16,7 @@ using namespace chrono;
 void addMinutesAndDisplay(int minutesToAdd) {
     auto now = system_clock::now();
     auto future_time = now + minutes(minutesToAdd);
-    time_t future_c = system_clock::to_time_t(future_time);
+    time_t future_c = system_clock::to_time_t(future_time);   //nu eu am scris asta dar n are legatura cu poo
     cout << put_time(localtime(&future_c), "%H:%M:%S");
 }
 const int MAX_LENGHT=256;
@@ -25,7 +25,7 @@ void checkForExit() {
     string input;
     while (true) {
         cin >> input;
-        if (input == "exit") {
+        if (input == "exit") {   //nu eu am scris asta dar n are legatura cu poo
             stopLoop = true;
             break;
         }
@@ -87,7 +87,7 @@ class Station{
       }
       return *this;
     }
-    void showStation(){
+    void showStation () const {
       cout << distance << " " << station_name << " " << change << " " << station_id << endl;
     }
 };
@@ -147,7 +147,7 @@ class Line{
         stations.erase(stations.begin());
         no_of_stations--;
       }
-      void printLine(){
+      void printLine() const {
         for(size_t i = 0; i < stations.size(); i++){
           cout<<stations[i];
           cout<<endl;
@@ -178,7 +178,7 @@ class Line{
      char* getDirection(){
        return stations[stations.size()-1].getStationName();
      }
-     void showStations(int i){
+     void showStations (int i){
        cout<<stations[i].getStationName();
      }
   Station getStation(int i){
@@ -294,8 +294,8 @@ System(const char *system_name="N/A", float trip_price = 0){
       }
     }
   }
-  Line& operator[](int index) {
-    return lines[index];
+  Line& operator[](int i) {
+    return lines[i];
 }
   System& operator=(const System& system){
     if(this->system_name != nullptr){
@@ -328,7 +328,7 @@ System(const char *system_name="N/A", float trip_price = 0){
     }
     return in;
   }
-  //preturile doar se scumpesc nu si scad, evident
+  //preturile doar se scumpesc nu si scad, evident lol
   System &operator++() {
         trip_price++;
         return *this;
@@ -434,7 +434,7 @@ class Train{
     char* getName(){
       return this->train_name;
     }
-    // Operator de incrementare ++ (prefixat și postfixat)
+    //operator de incrementare ++ (prefixat și postfixat)
     Train &operator++() { // Prefixat
         if (actual_capacity < max_capacity)
             actual_capacity++;
@@ -447,7 +447,7 @@ class Train{
             actual_capacity++;
         return temp;
     }
-    // Operator de decrementare -- (prefixat și postfixat)
+    //operator de decrementare -- (prefixat și postfixat)
     Train &operator--() {
         if (actual_capacity > 0)
             actual_capacity--;
@@ -459,11 +459,13 @@ class Train{
         if (actual_capacity > 0)
             actual_capacity--;
         return temp;
-    }// Operator de comparatie <, >, <=, >=
-    bool operator<(const Train &other) const { return this->average_spped < other.average_spped; }
-    bool operator>(const Train &other) const { return this->average_spped > other.average_spped; }
-    bool operator<=(const Train &other) const { return this->average_spped <= other.average_spped; }
-    bool operator>=(const Train &other) const { return this->average_spped >= other.average_spped; }
+    }// operator de comparatie
+    bool operator<(const Train &other) const {
+      return this->average_spped < other.average_spped;
+    }
+    bool operator>(const Train &other) const {
+      return this->average_spped > other.average_spped;
+    }
     //urmeaza cea mai oribila si glitch uita functie din lume
     void setTren(System &system){
         Line temp_line = system.getLine(this->assigned_line);
