@@ -1,6 +1,6 @@
 Metrorex 4
 15 M2 6
-4 Pipera 0
+16 Pipera 0
 3.3 Aurel_Vlaicu 0
 2.5 Aviatorilor 0
 4.8 Piata_Victoriei 1
@@ -40,3 +40,19 @@ Metrorex 4
 2.5 Republica 0
 3.2 Pantelimon 0
 
+15 M3 20
+4.3 Preciziei 0
+3.6 Pacii 0
+3.4 Gorjului 0
+2.3 Lujerului 0
+4.5 Politehnica 0
+3.2 Eroilor_1 1
+4.5 Izvor 1
+3.4 Piata_Unirii_1 1
+3.2 Timpuri_Noi 1
+3.4 Mihai_Bravu 1
+2.8 Dristor_1 1
+5.6 Nicolae_Grigorescu 1
+3.4 1_Decembrie_1989 0
+4 Nicolae_Teclu 0
+0 Anghel_Saligny 0
