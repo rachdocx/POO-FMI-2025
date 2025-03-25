@@ -1,5 +1,5 @@
-Depoul_Militari 4
-Budapesta M1 70 500 0
-Viena M2 90 500 0
-Roma M1 150 600 0
-Paris M3 95 800 45
+Depoul_Militari 4 
+Budapesta M1 70 500 0 
+Viena M2 90 500 0 
+Roma M1 150 600 0 
+Paris M3 95 800 45 
