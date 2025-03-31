@@ -4,18 +4,40 @@ class List{
    vector<int> data;
    int size, ma;
    public:
+   //constructor ptr o lista goala
    List(){
      size = 0;
-     ma = -999999999; //oricum verific ptr primul element si il pun pe
+     ma = -999999999; //oricum verific ptr primul element si il pun pe max
    }
+   //constructor lista initializata cu un singur element
+   List(const int x){
+     size = 1;
+     ma = x;
+     data.push_back(x);
+   }
+   //constructor lista initializata cu no elemente egale cu x
+   List(const int x, const int no){
+     size = no;
+     ma = x;
+     for(int i = 0; i < size; i++){
+       data.push_back(x);
+     }
+   }
+   //destructor
    ~List(){
      size = 0;
+     //nu am ce sa distrug
    }
+   //constructor de copiere
    List(const List& l){
      size = l.size;
      ma = l.ma;
-     data = l.data;
+     for(int i = 0; i < l.size; i++){
+       data.push_back(l.data[i]);
+     }
+     //sau data=l.data
    }
+   //adaugare int la dreapta
    void addInt(int x){
      if(size == 0){
        data.push_back(x);
@@ -29,6 +51,7 @@ class List{
          ma = x;
      }
    }
+   //overload adaugare int la un index
    void addInt(int x, int i){
       if(size == 0){
        addInt(x);
@@ -47,9 +70,11 @@ class List{
      data[i] = x;
      size++;
    }
+   //getter size
    int getSize(){
      return size;
    }
+   //getter max
    int getMax(){
      return ma;
    }
