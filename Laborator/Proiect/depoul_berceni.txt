@@ -1,0 +1,4 @@
+Depoul_Berceni
+2
+Metro Budapesta M1 80 900 0 1 8 
+Bus ABC123 90 40 100 0 1 B236PMB 1 
