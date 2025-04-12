@@ -1,6 +1,6 @@
 Metrorex 5
 15 M2 6
-16 Pipera 0
+3.4 Pipera 0
 3.3 Aurel_Vlaicu 0
 2.5 Aviatorilor 0
 4.8 Piata_Victoriei 1

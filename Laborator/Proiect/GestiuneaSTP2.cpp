@@ -13,12 +13,14 @@
 //run with clang++ -std=c++17 -o GestiuneaSTP GestiuneaSTP.cpp
 using namespace std;
 using namespace chrono;
+
 void addMinutesAndDisplay(const int minutesToAdd) {
   auto now = system_clock::now();
   auto future_time = now + minutes(minutesToAdd);
   time_t future_c = system_clock::to_time_t(future_time);
   cout << put_time(localtime( & future_c), "%H:%M:%S");
 }
+
 const int MAX_LENGHT = 256;
 atomic < bool > stopLoop(false);
 void checkForExit() {
@@ -387,7 +389,7 @@ class System {
   }
 };
 
-//clasa abstracta care va defini urmatoarele clase
+//CLASA ABSTRACTA care va defini urmatoarele clase
 class PublicTransport {
   protected: char * PublicTransport_name;
   float average_spped;
@@ -421,28 +423,46 @@ class PublicTransport {
     delete[] PublicTransport_name;
     delete[] assigned_line;
   }
+  //operator = virtual
+  virtual PublicTransport& operator=(const PublicTransport& other) {
+    if (this != &other) {
+      delete[] PublicTransport_name;
+      PublicTransport_name = new char[strlen(other.PublicTransport_name) + 1];
+      strcpy(PublicTransport_name, other.PublicTransport_name);
+
+      delete[] assigned_line;
+      assigned_line = new char[strlen(other.assigned_line) + 1];
+      strcpy(assigned_line, other.assigned_line);
+
+      average_spped = other.average_spped;
+      max_capacity = other.max_capacity;
+      actual_capacity = other.actual_capacity;
+    }
+    return *this;
+  }
 
   //nu cred ca mai are vreun sens dupa ce am facut o abstracta dar sure
-  PublicTransport & operator = (const PublicTransport & PublicTransport) {
-    if (this != & PublicTransport) {
-      if (this -> PublicTransport_name != nullptr) {
-        delete[] this -> PublicTransport_name;
-      }
-      this -> PublicTransport_name = new char[strlen(PublicTransport.PublicTransport_name) + 1];
-      strcpy(this -> PublicTransport_name, PublicTransport.PublicTransport_name);
-
-      if (this -> assigned_line != nullptr) {
-        delete[] this -> assigned_line;
-      }
-      this -> assigned_line = new char[strlen(PublicTransport.assigned_line) + 1];
-      strcpy(this -> assigned_line, PublicTransport.assigned_line);
-
-      this -> average_spped = PublicTransport.average_spped;
-      this -> max_capacity = PublicTransport.max_capacity;
-      this -> actual_capacity = PublicTransport.actual_capacity;
-    }
-    return * this;
-  }
+//  PublicTransport & operator = (const PublicTransport & PublicTransport) {
+//    if (this != & PublicTransport) {
+//      if (this -> PublicTransport_name != nullptr) {
+//        delete[] this -> PublicTransport_name;
+//      }
+//      this -> PublicTransport_name = new char[strlen(PublicTransport.PublicTransport_name) + 1];
+//      strcpy(this -> PublicTransport_name, PublicTransport.PublicTransport_name);
+//
+//      if (this -> assigned_line != nullptr) {
+//        delete[] this -> assigned_line;
+//      }
+//      this -> assigned_line = new char[strlen(PublicTransport.assigned_line) + 1];
+//      strcpy(this -> assigned_line, PublicTransport.assigned_line);
+//
+//      this -> average_spped = PublicTransport.average_spped;
+//      this -> max_capacity = PublicTransport.max_capacity;
+//      this -> actual_capacity = PublicTransport.actual_capacity;
+//    }
+//    return * this;
+//  }
+  //+ virtual dar pe pointeri
   virtual PublicTransport* operator+(int passengers) const = 0;
 //  friend PublicTransport operator + (const PublicTransport & t, int passengers) {
 //    PublicTransport temp = t;
@@ -455,6 +475,7 @@ class PublicTransport {
 //    return t + passengers;
 //  }
   //- nu int
+  //- virtuali pe pointeri
   virtual PublicTransport* operator-(int passengers) const = 0;
 //  friend PublicTransport operator - (const PublicTransport & t, int passengers) {
 //    PublicTransport temp = t;
@@ -543,7 +564,12 @@ class PublicTransport {
       cout << "The " << this -> getType() << "'s direction is: " << temp_line.getDirection() << endl;
       cout << endl;
       for (int i = 0; i < temp_line.getNoOfStations() - 1; i++) {
-        this -> actual_capacity += randomNumber;
+
+        //polimorsim
+        PublicTransport* updated = *this + randomNumber;
+        *this = *updated;
+        delete updated;
+
         randomNumber = dista(gen);
         int smth = getTime(temp_line[i]);
         global_smth += smth + 1;
@@ -561,7 +587,11 @@ class PublicTransport {
         }
         uniform_int_distribution < > distb(0, this -> actual_capacity);
         randomNumber2 = distb(gen);
-        this -> actual_capacity -= randomNumber2;
+
+        //polimorfism
+        updated = *this - randomNumber2;
+        *this = *updated;
+        delete updated;
 
       }
       cout << "The" << this -> getType() << " arrived at: ";
@@ -573,7 +603,11 @@ class PublicTransport {
       temp_line.showStations(0);
       cout << endl << endl;
       for (int i = temp_line.getNoOfStations() - 1; i > 0; i--) {
-        this -> actual_capacity += randomNumber;
+        //polimorfism
+        PublicTransport* updated = *this + randomNumber;
+        *this = *updated;
+        delete updated;
+
         randomNumber = dista(gen);
         int smth = getTime(temp_line[i - 1]);
         global_smth += smth + 1;
@@ -591,7 +625,10 @@ class PublicTransport {
         }
         uniform_int_distribution < > distb(0, this -> actual_capacity);
         randomNumber2 = distb(gen);
-        this -> actual_capacity -= randomNumber2;
+        updated = *this - randomNumber2;
+        *this = *updated;
+        delete updated;
+
       }
       cout << "The "<<this->getType()<<" arrived at: ";
       temp_line.showStations(0);
@@ -624,20 +661,25 @@ class Metro: public PublicTransport {
     this -> is_electric = orig.is_electric;
     this -> no_of_wagons = orig.no_of_wagons;
   }
-  Metro & operator = (const Metro & other) {
-    if (this != & other) {
-      PublicTransport::operator = (other); // atribuim partea din clasa de bază
-      this -> is_electric = other.is_electric;
-      this -> no_of_wagons = other.no_of_wagons;
+  PublicTransport& operator=(const PublicTransport& other) {
+      if (this != &other) {
+        const Metro* m = dynamic_cast<const Metro*>(&other);
+        if (m) {
+          PublicTransport::operator=(*m); // Apelează operatorul virtual din clasa de bază
+          this->is_electric = m->is_electric;
+          this->no_of_wagons = m->no_of_wagons;
+        }
+      }
+      return *this;
     }
-    return * this;
-  }
+
   friend istream & operator >> (istream & os, Metro & metro) {
     os >> (PublicTransport & ) metro;
     os >> metro.is_electric;
     os >> metro.no_of_wagons;
     return os;
   }
+
   friend ostream & operator << (ostream & os,
     const Metro & metro) {
     os << (PublicTransport & ) metro;
@@ -645,20 +687,24 @@ class Metro: public PublicTransport {
     os << metro.no_of_wagons << " ";
     return os;
   }
+
   //void print() {
   //  cout << static_cast < PublicTransport > ( * this) << endl;
   //  cout << is_electric << endl;
   //  cout << no_of_wagons << endl;
   //}
+
   const char * getType() const {
     return "Metro";
   }
+
   PublicTransport* operator++(int) {
       Metro* m = new Metro(*this);
       if (actual_capacity < max_capacity)
         actual_capacity++;
       return m;
     }
+
   PublicTransport* operator--(int) {
       Metro* m = new Metro(*this);
       if (actual_capacity > 0)
@@ -671,6 +717,7 @@ class Metro: public PublicTransport {
       m->actual_capacity += passengers;
       return m;
     }
+
   PublicTransport* operator-(int passengers) const {
       Metro* m = new Metro(*this);
       m->actual_capacity -= passengers;
@@ -678,9 +725,9 @@ class Metro: public PublicTransport {
         m->actual_capacity = 0;
       return m;
     }
-
 };
 class Bus: public PublicTransport {
+  protected:
   bool is_electric;
   char * registration_number;
   bool low_floor; //acces pentru persoane cu dizabilitati
@@ -700,6 +747,26 @@ class Bus: public PublicTransport {
     ~Bus() {
       delete[] registration_number;
     }
+  PublicTransport& operator=(const PublicTransport& other) {
+      if (this != &other) {
+        const Bus* b = dynamic_cast<const Bus*>(&other);
+        if (b) {
+          PublicTransport::operator=(*b);
+          is_electric = b->is_electric;
+
+          delete[] registration_number;
+          registration_number = new char[strlen(b->registration_number) + 1];
+          strcpy(registration_number, b->registration_number);
+
+          low_floor = b->low_floor;
+          for (int i = 0; i < 3; ++i) {
+            doors[i] = b->doors[i];
+          }
+        }
+      }
+      return *this;
+    }
+
   friend istream & operator >> (istream & os, Bus & bus) {
     os >> (PublicTransport & ) bus;
     os >> bus.is_electric;
@@ -711,6 +778,7 @@ class Bus: public PublicTransport {
     os >> bus.low_floor;
     return os;
   }
+
   friend ostream & operator << (ostream & os,
     const Bus & bus) {
     os << (PublicTransport & ) bus;
@@ -719,6 +787,7 @@ class Bus: public PublicTransport {
     os << bus.low_floor << " ";
     return os;
   }
+
   void switchLowFloor() {
     cout<<"Low Floor currently ";
     if(low_floor) {
@@ -742,12 +811,14 @@ class Bus: public PublicTransport {
   const char * getType() const {
     return "Bus";
   }
+
   PublicTransport* operator++(int) {
       Bus* m = new Bus(*this);
       if (actual_capacity < max_capacity)
         actual_capacity++;
       return m;
     }
+
   PublicTransport* operator--(int) {
       Bus* m = new Bus(*this);
       if (actual_capacity > 0)
@@ -762,6 +833,7 @@ class Bus: public PublicTransport {
         b->actual_capacity = b->max_capacity;
       return b;
     }
+
   PublicTransport* operator-(int passengers) const {
       Bus* b = new Bus(*this);
       b->actual_capacity -= passengers;
@@ -769,10 +841,9 @@ class Bus: public PublicTransport {
         b->actual_capacity = 0;
       return b;
     }
-
-
 };
 class Tram: public PublicTransport {
+  protected:
   bool is_electric;
   int no_of_USBports;
   friend class Trolleybus; //!!
@@ -791,6 +862,17 @@ class Tram: public PublicTransport {
       }
     }
     ~Tram() {}
+  PublicTransport& operator=(const PublicTransport& other) {
+      if (this != &other) {
+        const Tram* t = dynamic_cast<const Tram*>(&other);
+        if (t) {
+          PublicTransport::operator=(*t);
+          is_electric = t->is_electric;
+          no_of_USBports = t->no_of_USBports;
+        }
+      }
+      return *this;
+    }
   friend istream & operator >> (istream & os, Tram & tram) {
     os >> (PublicTransport & ) tram;
     os >> tram.is_electric;
@@ -807,6 +889,7 @@ class Tram: public PublicTransport {
   const char * getType() const {
     return "Tram";
   }
+
   PublicTransport* operator+(int passengers) const {
       Tram* t = new Tram(*this);
       t->actual_capacity += passengers;
@@ -861,11 +944,38 @@ public:
       : Bus(static_cast<const Bus&>(other)),
         Tram(static_cast<const Tram&>(other)),
         is_connected(other.is_connected) {}
+  PublicTransport& operator=(const PublicTransport& other) {
+      // alegem ramura Bus
+      if (static_cast<const PublicTransport*>(static_cast<const Bus*>(this)) != &other) {
+        const Trolleybus* t = dynamic_cast<const Trolleybus*>(&other);
+        if (t) {
+          Bus::operator=(*t); // copiem partea de bus si public transport
+          Tram::no_of_USBports = t->Tram::no_of_USBports; // partea din tram
+          is_connected = t->is_connected; // propriu
+        }
+      }
+      return *static_cast<Bus*>(this); //returnam un bus (???)
+    }
 
+  void changePlugStatus(){
+    cout<<"The Trolleybus is ";
+    if(is_connected)
+        cout<<"connected to the head wires ";
+    else
+        cout<<"disconnected from the head wires ";
+    cout<<"\nWould you like to change the status?(yes/no): ";
+    char op[6];
+    cin>>op;
+    if(op[0] == 'y')
+      is_connected = !is_connected;
+    else if(op[0] == 'n')
+      return;
+    else
+      cout<<"Invalid input!\n";
+  }
     const char* getType() const {
         return "Trolleybus";
     }
-
     // operator+ cu int
     PublicTransport* operator+(int passengers) const {
         Trolleybus* tb = new Trolleybus(*this);
@@ -900,19 +1010,19 @@ public:
       return static_cast<PublicTransport*>(static_cast<Bus*>(tb));
     }
 
-    // suprascriere istream
+    //overload istream
     friend istream& operator>>(istream& in, Trolleybus& t) {
-        in >> static_cast<Bus&>(t);           // citește PublicTransport și Bus
-        in >> t.Tram::no_of_USBports;         // citește partea din Tram
-        in >> t.is_connected;                 // specific Trolleybus
+        in >> static_cast<Bus&>(t);           // citeste publictransport si bus prin bus
+        in >> t.Tram::no_of_USBports;         // citeste partea din tram
+        in >> t.is_connected;                 // specific trolleybus
         return in;
     }
 
-    // suprascriere ostream
+    //overload ostream
     friend ostream& operator<<(ostream& out, const Trolleybus& t) {
-        out << static_cast<const Bus&>(t);          // scrie PublicTransport și Bus
-        out << t.Tram::no_of_USBports << " ";       // scrie partea din Tram
-        out << t.is_connected << " ";               // scrie partea din Trolleybus
+        out << static_cast<const Bus&>(t);          // scrie publicTransport si bus
+        out << t.Tram::no_of_USBports << " ";       // scrie partea din tram
+        out << t.is_connected << " ";               // scrie partea din trolleybus
         return out;
     }
 };
@@ -1013,15 +1123,15 @@ void changeLine(char name[50], char line_name[50]){
       }
       //trolleybus peste clasele derivate ca altfel nu intra niciodata aici
       else if (Trolleybus * tb = dynamic_cast < Trolleybus * > (depot.transports[i])) {
-        out << "Trolleybus " << * tb << endl;
-      } else if (Bus * b = dynamic_cast < Bus * > (depot.transports[i])) {
-        out << "Bus " << * b << endl;
-      } else if (Tram * t = dynamic_cast < Tram * > (depot.transports[i])) {
-        out << "Tram " << * t << endl;
-      } else {
-        out << * depot.transports[i] << " UnknownType\n";
-      }
-    }
+            out << "Trolleybus " << * tb << endl;
+          } else if (Bus * b = dynamic_cast < Bus * > (depot.transports[i])) {
+            out << "Bus " << * b << endl;
+          } else if (Tram * t = dynamic_cast < Tram * > (depot.transports[i])) {
+            out << "Tram " << * t << endl;
+          } else {
+            out << * depot.transports[i] << " UnknownType\n";
+          }
+        }
     return out;
   }
   friend istream & operator >> (istream & in, Depot & depot) {
@@ -1031,12 +1141,10 @@ void changeLine(char name[50], char line_name[50]){
     delete[] depot.depot_name;
     depot.depot_name = new char[strlen(name) + 1];
     strcpy(depot.depot_name, name);
-
     in >> n;
     for (int i = 0; i < n; ++i) {
       string type;
       in >> type;
-
       if (type == "Metro") {
         Metro * m = new Metro();
         in >> * m;
@@ -1097,7 +1205,10 @@ inline PublicTransport* operator-(int passengers, const PublicTransport& pt) {
 }
 
 int main() {
-
+//  Bus a("autobuzu", 50, "M1", 100, 50, true, "B123", true);
+//  PublicTransport* result = a + 20;
+//  cout << *dynamic_cast<Bus*>(result);
+//  delete result;
   vector<System> systems;
   systems.push_back(System("system_metro.txt"));
   systems.push_back(System("system_bus_tram_trolley.txt"));
@@ -1287,6 +1398,7 @@ int main() {
           cout << "5. To delete a vehicle\n";
           cout << "!6. To focus on a Vehicle's ride\n";
           cout << "7. Check and edit low floor of a bus or trolley\n";
+          cout << "8. Check and edit connection to overhead wires\n";
           cout << "0. Return to main menu\n";
           cout << "Enter option: ";
           cin >> vehicleOption;
@@ -1374,6 +1486,7 @@ int main() {
                     depots[i].changeLine(global_pb_type, global_line_name);
                   }
                 }
+                break;
             }
             case 5:{
               cout<<"Insert a depot: ";
@@ -1386,6 +1499,7 @@ int main() {
                   break;
                 }
               }
+              break;
             }
             case 6:{
 			  //cea mai mare prajeala care exista
@@ -1412,28 +1526,50 @@ int main() {
             case 7:{
                 cout<<"Insert a public transport name: ";
                 cin>>global_pb_type;
+                bool ok=false;
                 int i;
                 for ( i = 0; i < depots.size(); ++i) {
-                  for (int j = 0; j < systems.size(); ++j) {
+                  for (int j = 0; j < depots[i].size(); ++j) {
                     if(strcmp(depots[i][j]->getName(), global_pb_type) == 0) {
-                      if(strcmp(depots[i][j]->getType(), "Bus") == 0 || strcmp(depots[i][j]->getType(), "Tram") == 0) {
+                      if(strcmp(depots[i][j]->getType(), "Bus") == 0 || strcmp(depots[i][j]->getType(), "Trolleybus") == 0) {
                         //polimorfism
                         Bus * b = dynamic_cast<Bus*>(depots[i][j]);
                         b->switchLowFloor();
-                        delete b;
+
                       }
                       else
                         cout<<"This vehicle doesn't suppport low floor.\n";
-                      break;
+                      ok=true;
                     }
 
                   }
                 }
-                if(i == depots.size())
+                if(!ok)
                   cout<<"The vehicle could not be found.\n";
                 break;
               }
-
+            case 8:{
+              cout<<"Insert a trolleybus name: ";
+              cin>>global_pb_type;
+              bool ok=false;
+              for (int i = 0; i < depots.size(); ++i) {
+                for (int j = 0; j < depots[i].size(); ++j) {
+                  if(strcmp(depots[i][j]->getName(), global_pb_type) == 0) {
+                    if(strcmp(depots[i][j]->getType(), "Trolleybus") == 0) {
+                      //polimorfism
+                      Trolleybus * t = dynamic_cast<Trolleybus*>(depots[i][j]);
+                      t->changePlugStatus();
+                    }
+                    else
+                      cout<<"This vehicle is not a trolleybus.\n";
+                    ok=true;
+                  }
+                }
+              }
+              if(!ok)
+                cout<<"The vehicle could not be found.\n";
+              break;
+            }
             default:
               cout << "Invalid option. Please try again.\n";
               break;
@@ -1455,7 +1591,6 @@ int main() {
   for (int i = 0; i < depots.size(); ++i) {
     depots[i].saveDepot();
   }
-
   cout << "All data saved. Program terminated.\n";
   return 0;
 }
