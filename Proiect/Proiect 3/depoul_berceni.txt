@@ -1,6 +1,7 @@
 Depoul_Berceni
-4
-Metro Budapesta M1 80 900 0 1 8 
+5
 Bus ABC123 102 40 100 0 1 B236PMB 1 
+Metro Budapesta M1 80 900 0 1 8 
 Trolleybus Troleul1 102 60 150 0 0 B-264-PMB 0 30 0 
+Trolleybus Troleul62 90 40 200 0 1 B-56-PMB 0 20 0 
 Trolleybus Troleul90 90 40 100 0 1 B-456-PMB 0 40 0 

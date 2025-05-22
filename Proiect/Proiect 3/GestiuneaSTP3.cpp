@@ -2,7 +2,9 @@
 #include <cstring>
 
 #include <vector>
+#include <map>
 #include <string>
+#include <deque>
 
 #include <stdexcept>
 #include <limits>
@@ -15,8 +17,8 @@
 #include <chrono>
 #include <ctime>
 #include <iomanip>
- //am folosit si alocare dinamica si stl si vectori statici
-
+//am folosit si alocare dinamica si stl si vectori statici
+//nu am folosit list, am ales sa folosesc alt stl, adica dequeue ca are mai mult sens pentru proiect
 
 //run with clang++ -std=c++17 -o GestiuneaSTP GestiuneaSTP.cpp
 //command+f pentru: "polimforism", "CLASA ABSTRACTA", "virtual", "diamant"
@@ -101,7 +103,7 @@ class Station {
 };
 
 class Line {
-    vector < Station > stations;
+    deque < Station > stations;
     float length;
     int no_of_stations;
     string line_name;
@@ -142,7 +144,7 @@ class Line {
     }
 
     void addStationFront(const Station & station) {
-        stations.insert(stations.begin(), station);
+        stations.push_front(station);
         no_of_stations++;
     }
     void deleteStationBack() {
@@ -150,7 +152,7 @@ class Line {
         no_of_stations--;
     }
     void deleteStationFront() {
-        stations.erase(stations.begin());
+        stations.pop_front();
         no_of_stations--;
     }
     void printLine() const {
@@ -164,9 +166,9 @@ class Line {
         return line_name;
     }
     float getStationDistance(const string station_name) {
-        for (int i = 0; i < stations.size(); i++) {
-            if (station_name == stations[i].getStationName()){
-                return stations[i].getDistance();
+        for (auto i : stations) {
+            if (station_name == i.getStationName()){
+                return i.getDistance();
             }
         }
         return 0;
@@ -187,10 +189,10 @@ class Line {
         return stations.front();
     }
     string getDirection() {
-        return stations[stations.size() - 1].getStationName();
+        return stations.at(stations.size() - 1).getStationName();
     }
     void showStations(int i) {
-        cout << stations[i].getStationName();
+        cout << stations.at(i).getStationName();
     }
     Station getStation(int i) {
 
@@ -436,6 +438,8 @@ class PublicTransport {
     }
 
     //destructor virtual ca sa pot sterge corect in array ul de la depou
+    virtual PublicTransport* clone() const = 0;
+
     virtual~PublicTransport() {
 //        delete[] PublicTransport_name;
 //        delete[] assigned_line;
@@ -747,6 +751,9 @@ class Metro: public PublicTransport {
     }
     ~Metro() {
     }
+    Metro* clone() const {
+            return new Metro(*this);
+        }
     PublicTransport & operator = (const PublicTransport & other) {
         if (this != & other) {
             const Metro * m = dynamic_cast <
@@ -825,6 +832,9 @@ class Bus: public PublicTransport {
     }
     ~Bus() {
         //delete[] registration_number;
+    }
+    Bus* clone() const {
+        return new Bus(*this);
     }
     PublicTransport & operator = (const PublicTransport & other) {
         if (this != & other) {
@@ -929,6 +939,9 @@ class Tram: public PublicTransport {
             }
         }
     ~Tram() {}
+    Tram* clone() const  {
+        return new Tram(*this);
+    }
     PublicTransport & operator = (const PublicTransport & other) {
         if (this != & other) {
             const Tram * t = dynamic_cast <
@@ -1010,6 +1023,9 @@ class Trolleybus: public Bus, public Tram {
     ~Trolleybus() {
       //nimic explicit ca bus si tram se distrug corect singure
     }
+    Trolleybus* clone() const {
+            return new Trolleybus(*this);
+        }
     //polimorfism cu lista de initializai
     //downacast
     Trolleybus(const Trolleybus & other): Bus(static_cast <const Bus & > (other)),Tram(static_cast <const Tram & > (other)),is_connected(other.is_connected) {}
@@ -1102,7 +1118,8 @@ class Trolleybus: public Bus, public Tram {
 class Depot {
     string depot_name;
     string file_path;
-    vector < PublicTransport * > transports; //vectori de pointers la clasa de baza ale mijloacelor de transport in comun
+    //vector < PublicTransport * > transports; //vectori de pointers la clasa de baza ale mijloacelor de transport in comun
+  map <string, PublicTransport * > transports;
     public:
         Depot(const string file_path = "N/A", const string name = "N/A") {
             this -> file_path = file_path;
@@ -1111,8 +1128,8 @@ class Depot {
         ~Depot() {
 //            delete[] depot_name;
 //            delete[] file_path;
-            for (int i = 0; i < (int) transports.size(); ++i) {
-                delete transports[i];
+            for(auto const& i: transports) {
+              delete i.second;
             }
             transports.clear();
         }
@@ -1120,41 +1137,78 @@ class Depot {
         Depot(const Depot & other) {
             file_path = other.file_path;
             depot_name = other.depot_name;
-            for (int i = 0; i < (int) other.transports.size(); ++i) {
-                transports.push_back(other.transports[i]);
+            for(auto const& i: other.transports) {
+              if(i.second) {
+                transports[i.first] = i.second->clone();
+              }
             }
         }
-        void changeLine(string name, string line_name) {
-            for (int i = 0; i < transports.size(); i++) {
-                if (transports[i] -> getName() == name) {
-                    transports[i] -> changeLine(line_name);
-                    return;
-                }
+        void changeLine(const string name, const string line_name) {
+//            for (int i = 0; i < transports.size(); i++) {
+//                if (transports[i] -> getName() == name) {
+//                    transports[i] -> changeLine(line_name);
+//                    return;
+//                }
+//            }
+            auto i = transports.find(name);
+            if (i != transports.end()) {
+              PublicTransport* v_ptr = i->second;
+              if(v_ptr != nullptr) {
+                v_ptr->changeLine(line_name);
+              }
             }
         }
     void deleteVehicle(string nume) {
-        for (int i = 0; i < transports.size(); i++) {
-            if (transports[i] -> getName() == nume) {
-                transports.erase(transports.begin() + i);
+//        for (int i = 0; i < transports.size(); i++) {
+//            if (transports[i] -> getName() == nume) {
+//                transports.erase(transports.begin() + i);
+//            }
+//        }
+          auto i = transports.find(nume);
+          if (i != transports.end()) {
+            PublicTransport* v_ptr = i->second;
+            if(v_ptr != nullptr) {
+              delete v_ptr;
             }
-        }
+            transports.erase(i);
+          }
     }
     Depot & operator = (const Depot & other) {
         if (this != & other) {
-            for (int i = 0; i < (int) transports.size(); ++i) {
-                delete transports[i];
+          for (auto const& i: this->transports) {
+            delete i.second;
+          }
+          this->transports.clear();
+          file_path = other.file_path;
+          depot_name = other.depot_name;
+          for(auto const& i: other.transports) {
+            if(i.second != nullptr) {
+              PublicTransport* temp = i.second->clone(); //de rezolvat copiere superficiala candva daca mai ai timp
+              this->transports[i.first] = temp;
             }
-            transports.clear();
-            depot_name = other.depot_name;
-            for (int i = 0; i < (int) other.transports.size(); ++i) {
-                transports.push_back(other.transports[i]);
-            }
+            else
+              this->transports[i.first] = nullptr;
+          }
+//            for (int i = 0; i < (int) transports.size(); ++i) {
+//                delete transports[i];
+//            }
+//            transports.clear();
+//            depot_name = other.depot_name;
+//            for (int i = 0; i < (int) other.transports.size(); ++i) {
+//                transports.push_back(other.transports[i]);
+//            }
         }
         return * this;
     }
 
     void add(PublicTransport * t) {
-        transports.push_back(t);
+        auto i = transports.find(t->getName());
+        if (i != transports.end()) {
+          if(i->second != nullptr && i->second != t) {
+            delete i->second;
+          }
+        }
+        transports[t->getName()] = t;
     }
 
     int size() const {
@@ -1162,35 +1216,69 @@ class Depot {
     }
 
     PublicTransport * operator[](int index) {
-        return transports[index];
+      if (index < 0 || index >= size())
+        return nullptr;
+      int nr = 0;
+      for (auto const& i: transports) {  //complet ineficient
+        if(nr == index)
+          return i.second;
+        nr++;
+      }
+      return nullptr;
+        //return transports[index];
     }
     PublicTransport * getTrain(string nume) {
-        for (int i = 0; i < transports.size(); i++) {
-            if (transports[i] -> getName() == nume) {
-                return transports[i];
-            }
-        }
+      auto i = transports.find(nume);
+      if (i != transports.end()) {
+        return i->second;
+      }
+      else
         return nullptr;
+//        for (int i = 0; i < transports.size(); i++) {
+//            if (transports[i] -> getName() == nume) {
+//                return transports[i];
+//            }
+//        }
+//        return nullptr;
     }
     friend ostream & operator << (ostream & out, const Depot & depot) {
         out << depot.depot_name << '\n';
         out << depot.transports.size() << '\n';
-        for (int i = 0; i < depot.transports.size(); ++i) {
-            if (Metro * m = dynamic_cast < Metro * > (depot.transports[i])) {
-                out << "Metro " << * m << endl;
-            }
-            //trolleybus peste clasele derivate ca altfel nu intra niciodata aici
-            else if (Trolleybus * tb = dynamic_cast < Trolleybus * > (depot.transports[i])) {
-                out << "Trolleybus " << * tb << endl;
-            } else if (Bus * b = dynamic_cast < Bus * > (depot.transports[i])) {
-                out << "Bus " << * b << endl;
-            } else if (Tram * t = dynamic_cast < Tram * > (depot.transports[i])) {
-                out << "Tram " << * t << endl;
-            } else {
-                out << * depot.transports[i] << " UnknownType\n";
-            }
+        for (auto const& i: depot.transports) {
+        PublicTransport* temp = i.second;
+        if(Trolleybus* tb = dynamic_cast<Trolleybus*>(temp)) {
+          out<<"Trolleybus "<<*tb<<'\n';
         }
+        else if(Metro * m = dynamic_cast<Metro*>(temp)) {
+          out<<"Metro "<<*m<<'\n';
+        }
+        else if(Bus* b = dynamic_cast<Bus*>(temp)) {
+          out<<"Bus "<<*b<<'\n';
+        }
+        else if(Tram * t = dynamic_cast<Tram*>(temp)) {
+          out<<"Tram "<<*t<<'\n';
+        }
+        else
+          cout<<"Unknown type!\n";
+        }
+//        for (int i = 0; i < depot.transports.size(); ++i) {
+//            if (Metro * m = dynamic_cast < Metro * > (depot.transports[i])) {
+//                out << "Metro " << * m << endl;
+//            }
+//            //trolleybus peste clasele derivate ca altfel nu intra niciodata aici
+//            else if (Trolleybus * tb = dynamic_cast < Trolleybus * > (depot.transports[i])) {
+//                out << "Trolleybus " << * tb << endl;
+//            } else if (Bus * b = dynamic_cast < Bus * > (depot.transports[i])) {
+//                out << "Bus " << * b << endl;
+//            } else if (Tram * t = dynamic_cast < Tram * > (depot.transports[i])) {
+//                out << "Tram " << * t << endl;
+//            } else {
+//                out << * depot.transports[i] << " UnknownType\n";
+//            }
+//        }
+
         return out;
+
     }
     friend istream & operator >> (istream & in, Depot & depot) {
         string name;
@@ -1198,31 +1286,61 @@ class Depot {
         in >> name;
         depot.depot_name = name;
         in >> n;
-        for (int i = 0; i < n; ++i) {
-            string type;
-            in >> type;
-            if (type == "Metro") {
-                Metro * m = new Metro();
-                in >> * m;
-                depot.transports.push_back(m);
-            } else if (type == "Bus") {
-                Bus * b = new Bus();
-                in >> * b;
-                depot.transports.push_back(b);
-            } else if (type == "Tram") {
-                Tram * tr = new Tram();
-                in >> * tr;
-                depot.transports.push_back(tr);
-            } else if (type == "Trolleybus") {
-                Trolleybus * t = new Trolleybus();
-                in >> * t;
-                depot.transports.push_back(static_cast < Bus * > (t));
-            }
+        for(int i = 0; i < n; i++) {
+          string type;
+          in >> type;
+          PublicTransport* temp = nullptr;
+          if(type == "Metro"){
+            Metro* m = new Metro();
+            in >> *m;
+            temp = m;
+          }
+          else if(type == "Bus"){
+            Bus* b = new Bus();
+            in >> *b;
+            temp = b;
+          }
+          else if(type == "Tram"){
+            Tram* t = new Tram();
+            in >> *t;
+            temp = t;
+          }
+          else if(type == "Trolleybus"){
+            Trolleybus* t = new Trolleybus();
+            in >> *t;
+            temp = static_cast <Bus*> (t);
+          }
+          if(temp != nullptr) {
+            depot.transports[temp->getName()] = temp;
+          }
+
         }
+//        for (int i = 0; i < n; ++i) {
+//            string type;
+//            in >> type;
+//            if (type == "Metro") {
+//                Metro * m = new Metro();
+//                in >> * m;
+//                depot.transports.push_back(m);
+//            } else if (type == "Bus") {
+//                Bus * b = new Bus();
+//                in >> * b;
+//                depot.transports.push_back(b);
+//            } else if (type == "Tram") {
+//                Tram * tr = new Tram();
+//                in >> * tr;
+//                depot.transports.push_back(tr);
+//            } else if (type == "Trolleybus") {
+//                Trolleybus * t = new Trolleybus();
+//                in >> * t;
+//                depot.transports.push_back(static_cast < Bus * > (t));
+//            }
+//        }
         return in;
     }
     void addTransport(PublicTransport * t) {
-        transports.push_back(t);
+        //transports.push_back(t);
+        transports[t->getName()] = t;
     }
     string getName() const {
         return depot_name;
@@ -1286,61 +1404,55 @@ inline PublicTransport * operator - (int passengers, const PublicTransport & pt)
     return pt - passengers;
 }
 
-int main() {
-    //  Bus a("autobuzu", 50, "M1", 100, 50, true, "B123", true);
-    //  PublicTransport* result = a + 20;
-    //  cout << *dynamic_cast<Bus*>(result);
-    //  delete result;
-    vector < System > systems;
-    systems.push_back(System("system_metro.txt"));
-    systems.push_back(System("system_bus_tram_trolley.txt"));
-    //systems.push_back(System("system_cfr.txt"));
-    for (int i = 0; i < systems.size(); ++i) {
-        systems[i].loadSystem();
+class Singleton{
+  private:
+    static Singleton * instance;
+    vector<System> &systems;
+    vector<Depot> &depots;
+    Singleton(vector<System>&s,vector<Depot>&d):systems(s),depots(d){}
+    //prima metoda template
+    template<class vehicle_type>
+    vehicle_type * createAndRead(const string message){
+        cout<<message<<'\n';
+        vehicle_type * vehicle = new vehicle_type();
+        cin >> *vehicle;
+        return vehicle;
     }
-
-    vector < Depot > depots;
-    depots.push_back(Depot("depoul_militari.txt"));
-    depots.push_back(Depot("depoul_berceni.txt"));
-    //depots.push_back(Depot("depoul_garadenord.txt"));
-    for (int i = 0; i < depots.size(); ++i) {
-        depots[i].loadDepot();
+    void mainMenu() {
+        cout << "\n===== MAIN MENU =====\n";
+        cout << "1. Manage Systems\n";
+        cout << "2. Manage Vehicles\n";
+        cout << "0. Exit program\n";
+        cout << "Enter option: ";
     }
-    int option = -1;
-    do {
-      try{
-            cout << "\n===== MAIN MENU =====\n";
-            cout << "1. Manage Systems\n";
-            cout << "2. Manage Vehicles\n";
-            cout << "0. Exit program\n";
-            cout << "Enter option: ";
-            cin >> option;
-            if(cin.fail()) {
-              cin.clear();
-              cin.ignore();
-              throw ios_base::failure("Option failure!");
-            }
-            if(option != 1 && option != 2 && option != 0) {
-              throw invalid_argument("Not an option!");
-            }
-            switch (option) {
-            case 0:
-                cout << "Exiting program...\n";
-                break;
-
-            case 1: {
-                    int systemOption = -1;
+    void systemMenuPrint(){
+        cout << "\n===== SYSTEM MANAGEMENT =====\n";
+        cout << "1. Show all Systems\n";
+        cout << "2. Show a specific System\n";
+        cout << "3. Add a Station\n";
+        cout << "4. Add a line\n";
+        cout << "5. Remove a Station\n";
+        cout << "6. Remove a line\n";
+        cout << "0. Return to main menu\n";
+        cout << "Enter option: ";
+    }
+    void vehicleMenuPrint(){
+        cout << "\n===== VEHICLE MANAGEMENT =====\n";
+        cout << "1. Show all Depots\n";
+        cout << "2. Add a vehicle\n";
+        cout << "3. To show a specific depot\n";
+        cout << "4. To assign other line to a vehicle\n";
+        cout << "5. To delete a vehicle\n";
+        cout << "!6. To focus on a Vehicle's ride\n";
+        cout << "7. Check and edit low floor of a bus or trolley\n";
+        cout << "8. Check and edit connection to overhead wires\n";
+        cout << "0. Return to main menu\n";
+        cout << "Enter option: ";
+    }
+    void systemsMenu(){
+      int systemOption = -1;
                     do {
-
-                        cout << "\n===== SYSTEM MANAGEMENT =====\n";
-                        cout << "1. Show all Systems\n";
-                        cout << "2. Show a specific System\n";
-                        cout << "3. Add a Station\n";
-                        cout << "4. Add a line\n";
-                        cout << "5. Remove a Station\n";
-                        cout << "6. Remove a line\n";
-                        cout << "0. Return to main menu\n";
-                        cout << "Enter option: ";
+                        systemMenuPrint();
                         try{
                         cin >> systemOption;
                         if(systemOption < 0 || systemOption >6) {
@@ -1551,23 +1663,11 @@ int main() {
                         }
 
                     } while (systemOption != 0);
-                break;
-            }
-
-            case 2: {
-                int vehicleOption = -1;
+    }
+    void depotsMenu(){
+      int vehicleOption = -1;
                 do {
-                    cout << "\n===== VEHICLE MANAGEMENT =====\n";
-                    cout << "1. Show all Depots\n";
-                    cout << "2. Add a vehicle\n";
-                    cout << "3. To show a specific depot\n";
-                    cout << "4. To assign other line to a vehicle\n";
-                    cout << "5. To delete a vehicle\n";
-                    cout << "!6. To focus on a Vehicle's ride\n";
-                    cout << "7. Check and edit low floor of a bus or trolley\n";
-                    cout << "8. Check and edit connection to overhead wires\n";
-                    cout << "0. Return to main menu\n";
-                    cout << "Enter option: ";
+                    vehicleMenuPrint();
                     try
                      {
                     cin >> vehicleOption;
@@ -1604,32 +1704,36 @@ int main() {
                             if (depots[i].getName() == global_depot_name) {
                                 if (global_pb_type == "Metro") {
                                     //polimorfism
-                                    cout << "Insert Name, Assigned Line, Average Speed, Maximum Capacity, Actual Capacity, Electric?(1/0), and Number of Wagons\n";
-                                    Metro * m = new Metro();
-                                    cin >> * m;
-                                    depots[i].add(m);
+                                    depots[i].add(createAndRead<Metro>("Insert Name, Assigned Line, Average Speed, Maximum Capacity, Actual Capacity, Electric?(1/0), and Number of Wagons\n"));
+//                                    cout << "Insert Name, Assigned Line, Average Speed, Maximum Capacity, Actual Capacity, Electric?(1/0), and Number of Wagons\n";
+//                                    Metro * m = new Metro();
+//                                    cin >> * m;
+//                                    depots[i].add(m);
 
                                 } else if (global_pb_type == "Bus") {
                                     //polimorfism
-                                    cout << "Insert Name, Assigned Line, Average Speed, Maximum Capacity, Actual Capacity, Electric?(1/0), Registration Number, and Low Floor Status\n";
-                                    Bus * b = new Bus();
-                                    cin >> * b;
-                                    depots[i].add(b);
+                                    depots[i].add(createAndRead<Bus>("Insert Name, Assigned Line, Average Speed, Maximum Capacity, Actual Capacity, Electric?(1/0), Registration Number, and Low Floor Status\n"));
+//                                    cout << "Insert Name, Assigned Line, Average Speed, Maximum Capacity, Actual Capacity, Electric?(1/0), Registration Number, and Low Floor Status\n";
+//                                    Bus * b = new Bus();
+//                                    cin >> * b;
+//                                    depots[i].add(b);
 
                                 } else if (global_pb_type == "Tram") {
                                     //polimorfism
-                                    cout << "Insert Name, Assigned Line, Average Speed, Maximum Capacity, Actual Capacity, Electric?(1/0), Number of USB ports\n";
-                                    Tram * t = new Tram();
-                                    cin >> * t;
-                                    depots[i].add(t);
+                                    depots[i].add(createAndRead<Tram>("Insert Name, Assigned Line, Average Speed, Maximum Capacity, Actual Capacity, Electric?(1/0), Number of USB ports\n"));
+//                                    cout << "Insert Name, Assigned Line, Average Speed, Maximum Capacity, Actual Capacity, Electric?(1/0), Number of USB ports\n";
+//                                    Tram * t = new Tram();
+//                                    cin >> * t;
+//                                    depots[i].add(t);
 
                                 } else if (global_pb_type == "Trolleybus") {
                                     //polimorfism
-                                    cout << "Insert Name, Assigned Line, Average Speed, Maximum Capacity, Actual Capacity, Electric?(1/0), Registration Number, and Low Floor Status, Number of USB ports, Plugged Status\n";
-                                    Trolleybus * t = new Trolleybus();
-                                    cin >> * t;
-                                    //downcast
-                                    depots[i].add(static_cast < Bus * > (t));
+                                    depots[i].add(static_cast<Bus *>(createAndRead<Trolleybus>("Insert Name, Assigned Line, Average Speed, Maximum Capacity, Actual Capacity, Electric?(1/0), Registration Number, and Low Floor Status, Number of USB ports, Plugged Status\n")));
+//                                    cout << "Insert Name, Assigned Line, Average Speed, Maximum Capacity, Actual Capacity, Electric?(1/0), Registration Number, and Low Floor Status, Number of USB ports, Plugged Status\n";
+//                                    Trolleybus * t = new Trolleybus();
+//                                    cin >> * t;
+//                                    //downcast
+//                                    depots[i].add(static_cast < Bus * > (t));
 
                                 } else
                                     cout << "Invalid option.\n";
@@ -1748,15 +1852,19 @@ int main() {
                         try{
                         for (i = 0; i < depots.size(); ++i) {
                             for (int j = 0; j < depots[i].size(); ++j) {
+
                                 if (depots[i][j] -> getName() == global_pb_type) {
                                   try{
-                                  if(depots[i][j]-> getType() != "Bus" && depots[i][j] -> getType()!= "Tram") {
+
+
+                                  if(depots[i][j]-> getType() != "Bus" && depots[i][j] -> getType()!= "Trolleybus") {
                                     throw logic_error ( "\n" + global_pb_type + " doesn't support low floor.\n");
                                   }
                                     //if (depots[i][j] -> getType() == "Bus" || depots[i][j] -> getType() == "Trolleybus") {
                                         //polimorfism
                                         Bus * b = dynamic_cast < Bus * > (depots[i][j]); //downcast de la trolleybus->bus
-                                        b -> switchLowFloor();
+                                        if(b != nullptr)
+                                            b->switchLowFloor();
 
                                    // } else
                                       //  cout << "This vehicle doesn't suppport low floor.\n";
@@ -1768,11 +1876,11 @@ int main() {
                                 }
 
                             }
-                        }
+                        }//nu i am mai rasp de la 2 aokk
                             if(ok == false)
                               throw runtime_error (global_pb_type + " could not be found!");
-                        }
-                        catch(const runtime_error & e) {
+                        }//this is so boring ts pmo
+                        catch(const runtime_error & e)  {
                           cout<<e.what()<<endl;
                         }
                         break;
@@ -1826,23 +1934,91 @@ int main() {
                     }
 
                 } while (vehicleOption != 0);
-                break;
-            }
+    }
+    public:
+        Singleton(const Singleton &) = delete;
+        Singleton & operator=(const Singleton &) = delete;
 
-            default:
-                cout << "Invalid option. Please try again.\n";
-                break;
+        static Singleton * getInstance(vector <System> &systems, vector<Depot> &depots) {
+            if(instance == nullptr){
+              instance = new Singleton (systems, depots);
             }
-       }
-       catch(ios_base::failure& e){
-         cout<<e.what()<<"\n";
-         option = -1;
-       }
-       catch(invalid_argument& e){
-         cout<<e.what()<<"\n";
-         option = -1;
-       }
-    } while (option != 0);
+            return instance;
+        }
+
+        void run(){
+          option = -1;
+          do{
+            try{
+              mainMenu();
+              cin>>option;
+                if(cin.fail()) {
+                    cin.clear();
+                    cin.ignore();
+                    throw ios_base::failure("Option failure!");
+                }
+                if(option != 1 && option != 2 && option != 0) {
+                    throw invalid_argument("Not an option!");
+                }
+                switch(option){
+                  case 0:{
+                    cout<<"Exiting program...\n";
+                    break;
+                  }
+                    case 1:{
+                      systemsMenu();
+                      break;
+                    }
+                      case 2:{
+                        depotsMenu();
+                        break;
+                    }
+                }
+
+            }
+              catch(ios_base::failure& e){
+                  cout<<e.what()<<"\n";
+                  option = -1;
+              }
+              catch(invalid_argument& e){
+                  cout<<e.what()<<"\n";
+                  option = -1;
+              }
+          }while(option != 0);
+        }
+    static void removeInstance(){
+      delete instance;
+      instance = nullptr;
+    }
+};
+Singleton * Singleton::instance = nullptr;
+int main() {
+    //  Bus a("autobuzu", 50, "M1", 100, 50, true, "B123", true);
+    //  PublicTransport* result = a + 20;
+    //  cout << *dynamic_cast<Bus*>(result);
+    //  delete result;
+    vector < System > systems;
+    systems.push_back(System("system_metro.txt"));
+    systems.push_back(System("system_bus_tram_trolley.txt"));
+    //systems.push_back(System("system_cfr.txt"));
+    for (int i = 0; i < systems.size(); ++i) {
+        systems[i].loadSystem();
+    }
+
+    vector < Depot > depots;
+    depots.push_back(Depot("depoul_militari.txt"));
+    depots.push_back(Depot("depoul_berceni.txt"));
+    //depots.push_back(Depot("depoul_garadenord.txt"));
+    for (int i = 0; i < depots.size(); ++i) {
+        depots[i].loadDepot();
+    }
+
+
+
+    Singleton * MENIU = Singleton::getInstance(systems, depots);
+    MENIU -> run();
+
+
 
     for (int i = 0; i < systems.size(); ++i) {
         systems[i].saveSystem();

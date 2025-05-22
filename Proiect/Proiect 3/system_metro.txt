@@ -16,7 +16,7 @@ Metrorex 5
 4.1 Berceni 0
 4 Tudor_Arghezi 0
 
-22 M1 16
+21 M1 16
 2.7 Dristor_2 1
 2 Piata_Muncii 0
 1.8 Piata_Iancului 0
@@ -38,7 +38,6 @@ Metrorex 5
 1.7 Titan 0
 1.9 Costin_Georgian 0
 2.5 Republica 0
-3.2 Pantelimon 0
 
 15 M3 20
 4.3 Preciziei 0
