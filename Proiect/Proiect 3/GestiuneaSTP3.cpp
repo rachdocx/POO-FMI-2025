@@ -1404,12 +1404,92 @@ inline PublicTransport * operator - (int passengers, const PublicTransport & pt)
     return pt - passengers;
 }
 
+template <class T>
+class Object {
+    T generic_object;
+    string file_path;
+    public:
+
+      Object(string file_path = "N/A", T generic_object = T()){
+        this->generic_object = generic_object;
+        this->file_path = file_path;
+      }
+      ~Object(){
+
+      }
+      Object(const Object<T> &other){
+        generic_object = other.generic_object;
+        file_path = other.file_path;
+      }
+      Object<T> & operator = (const Object<T> &other){
+        generic_object = other.generic_object;
+        file_path = other.file_path;
+        return *this;
+      }
+    void loadObject() {
+          ifstream f;
+          try{
+              f.open(file_path);
+              if (!f.is_open()) {
+                  throw runtime_error("Error opening file" + file_path);
+              }
+              f >> generic_object;
+              if(f.fail()){
+                  throw runtime_error("Error reading file" + file_path);
+              }
+              f.close();
+          }
+          catch(const runtime_error & e) {
+              cout << e.what() << endl;
+              if(f.is_open()){
+                  f.close();
+              }
+          }
+      }
+    void saveObject() {
+          ofstream f;
+          try{
+              f.open(file_path);
+              if (!f.is_open()) {
+                  throw runtime_error("Error opening file" + file_path);
+              }
+              f << generic_object;
+              if(f.fail()){
+                  throw runtime_error("Error writing file" + file_path);
+              }
+              f.close();
+          }
+          catch(const runtime_error & e) {
+              cout << e.what() << endl;
+              if(f.is_open()){
+                  f.close();
+              }
+          }
+
+      }
+    T& getGenericObject() {
+          return generic_object;
+      }
+    const T& getGenericObject() const {
+          return generic_object;
+      }
+    const string& getFilePath() const {
+          return file_path;
+      }
+    void setFilePath(const std::string& path) {
+          file_path = path;
+      }
+};
+
+
 class Singleton{
   private:
     static Singleton * instance;
-    vector<System> &systems;
-    vector<Depot> &depots;
-    Singleton(vector<System>&s,vector<Depot>&d):systems(s),depots(d){}
+    vector< Object <System> > &systems;
+    vector< Object < Depot> > &depots;
+
+
+    Singleton(vector<Object <System>>&s,vector<Object <Depot> >&d):systems(s),depots(d){}
     //prima metoda template
     template<class vehicle_type>
     vehicle_type * createAndRead(const string message){
@@ -1422,6 +1502,7 @@ class Singleton{
         cout << "\n===== MAIN MENU =====\n";
         cout << "1. Manage Systems\n";
         cout << "2. Manage Vehicles\n";
+        cout << "3. See and Manage Schedule\n";
         cout << "0. Exit program\n";
         cout << "Enter option: ";
     }
@@ -1449,6 +1530,11 @@ class Singleton{
         cout << "0. Return to main menu\n";
         cout << "Enter option: ";
     }
+    void scheduleMenuPrint(){
+      cout << "\n===== SCHEDULE MANAGEMENT =====\n";
+      cout << "1. Show all Schedules\n";
+      cout << "2. Show a specific Schedule\n";
+    }
     void systemsMenu(){
       int systemOption = -1;
                     do {
@@ -1471,7 +1557,7 @@ class Singleton{
                         case 1: {
                             cout << "\nAvailable Systems:\n";
                             for (int i = 0; i < systems.size(); ++i) {
-                                cout << systems[i].getName() << endl;
+                                cout << systems[i].getGenericObject().getName() << endl;
                             }
                             break;
                         }
@@ -1484,8 +1570,8 @@ class Singleton{
 
                             int i;
                             for (i = 0; i < systems.size(); ++i) {
-                                if (systems[i].getName() == global_station_name) {
-                                    cout << systems[i] << endl;
+                                if (systems[i].getGenericObject().getName() == global_station_name) {
+                                    cout << systems[i].getGenericObject() << endl;
                                     break;
                                 }
                             }
@@ -1522,12 +1608,12 @@ class Singleton{
                                     }
                                     for (i = 0; i < systems.size(); ++i) {
 
-                                        if (systems[i].getName() == global_system_name){
+                                        if (systems[i].getGenericObject().getName() == global_system_name){
                                             if (addOption == 1) {
-                                                systems[i].addToLineBack(station, global_line_name);
+                                                systems[i].getGenericObject().addToLineBack(station, global_line_name);
                                                 cout << "Station added to the back of the line.\n";
                                             } else if (addOption == 2) {
-                                                systems[i].addToLineFront(station, global_line_name); //de facut try and catch dupa ce fac dequeue
+                                                systems[i].getGenericObject().addToLineFront(station, global_line_name); //de facut try and catch dupa ce fac dequeue
                                                 cout << "Station added to the front of the line.\n";
                                             } else {
                                                 cout << "Invalid option.\n";
@@ -1557,8 +1643,8 @@ class Singleton{
                             try{
                               int i;
                                 for (i = 0; i < systems.size(); ++i) {
-                                    if (systems[i].getName() == global_system_name) {
-                                        systems[i].addLine(global_line_name);
+                                    if (systems[i].getGenericObject().getName() == global_system_name) {
+                                        systems[i].getGenericObject().addLine(global_line_name);
                                         break;
                                     }
                                 }
@@ -1584,11 +1670,11 @@ class Singleton{
                               }
                               int i;
                                 for (i = 0; i < systems.size(); ++i) {
-                                    if (systems[i].getName() == global_system_name) {
+                                    if (systems[i].getGenericObject().getName() == global_system_name) {
                                         if (option2 == 1) {
-                                            systems[i].deleteFromLineBack(global_line_name);
+                                            systems[i].getGenericObject().deleteFromLineBack(global_line_name);
                                         } else if (option2 == 2) {
-                                            systems[i].deleteFromLineFront(global_line_name);
+                                            systems[i].getGenericObject().deleteFromLineFront(global_line_name);
                                         } else
                                             cout << "Invalid option.\n";
                                         break;
@@ -1611,8 +1697,8 @@ class Singleton{
                             try{
                                 int i;
                                 for (i = 0; i < systems.size(); ++i) {
-                                    if (systems[i].getName() == global_system_name) {
-                                        systems[i].deleteLine(global_line_name);
+                                    if (systems[i].getGenericObject().getName() == global_system_name) {
+                                        systems[i].getGenericObject().deleteLine(global_line_name);
                                         break;
                                     }
                                 }
@@ -1632,8 +1718,8 @@ class Singleton{
                             try{
                               int i;
                                 for (i = 0; i < systems.size(); ++i) {
-                                    if (systems[i].getName() == global_system_name){
-                                        systems[i]++;
+                                    if (systems[i].getGenericObject().getName() == global_system_name){
+                                        systems[i].getGenericObject()++;
                                         break;
                                     }
 
@@ -1687,7 +1773,7 @@ class Singleton{
                     case 1:
                         cout << '\n';
                         for (int i = 0; i < depots.size(); ++i) {
-                            cout << depots[i].getName() << "\n";
+                            cout << depots[i].getGenericObject().getName() << "\n";
                         }
                         break;
 
@@ -1701,10 +1787,10 @@ class Singleton{
                             throw logic_error (global_pb_type + " is not a valid public transport vehicle type.");
                         int i;
                         for (i = 0; i < depots.size(); ++i) {
-                            if (depots[i].getName() == global_depot_name) {
+                            if (depots[i].getGenericObject().getName() == global_depot_name) {
                                 if (global_pb_type == "Metro") {
                                     //polimorfism
-                                    depots[i].add(createAndRead<Metro>("Insert Name, Assigned Line, Average Speed, Maximum Capacity, Actual Capacity, Electric?(1/0), and Number of Wagons\n"));
+                                    depots[i].getGenericObject().add(createAndRead<Metro>("Insert Name, Assigned Line, Average Speed, Maximum Capacity, Actual Capacity, Electric?(1/0), and Number of Wagons\n"));
 //                                    cout << "Insert Name, Assigned Line, Average Speed, Maximum Capacity, Actual Capacity, Electric?(1/0), and Number of Wagons\n";
 //                                    Metro * m = new Metro();
 //                                    cin >> * m;
@@ -1712,7 +1798,7 @@ class Singleton{
 
                                 } else if (global_pb_type == "Bus") {
                                     //polimorfism
-                                    depots[i].add(createAndRead<Bus>("Insert Name, Assigned Line, Average Speed, Maximum Capacity, Actual Capacity, Electric?(1/0), Registration Number, and Low Floor Status\n"));
+                                    depots[i].getGenericObject().add(createAndRead<Bus>("Insert Name, Assigned Line, Average Speed, Maximum Capacity, Actual Capacity, Electric?(1/0), Registration Number, and Low Floor Status\n"));
 //                                    cout << "Insert Name, Assigned Line, Average Speed, Maximum Capacity, Actual Capacity, Electric?(1/0), Registration Number, and Low Floor Status\n";
 //                                    Bus * b = new Bus();
 //                                    cin >> * b;
@@ -1720,7 +1806,7 @@ class Singleton{
 
                                 } else if (global_pb_type == "Tram") {
                                     //polimorfism
-                                    depots[i].add(createAndRead<Tram>("Insert Name, Assigned Line, Average Speed, Maximum Capacity, Actual Capacity, Electric?(1/0), Number of USB ports\n"));
+                                    depots[i].getGenericObject().add(createAndRead<Tram>("Insert Name, Assigned Line, Average Speed, Maximum Capacity, Actual Capacity, Electric?(1/0), Number of USB ports\n"));
 //                                    cout << "Insert Name, Assigned Line, Average Speed, Maximum Capacity, Actual Capacity, Electric?(1/0), Number of USB ports\n";
 //                                    Tram * t = new Tram();
 //                                    cin >> * t;
@@ -1728,7 +1814,7 @@ class Singleton{
 
                                 } else if (global_pb_type == "Trolleybus") {
                                     //polimorfism
-                                    depots[i].add(static_cast<Bus *>(createAndRead<Trolleybus>("Insert Name, Assigned Line, Average Speed, Maximum Capacity, Actual Capacity, Electric?(1/0), Registration Number, and Low Floor Status, Number of USB ports, Plugged Status\n")));
+                                    depots[i].getGenericObject().add(static_cast<Bus *>(createAndRead<Trolleybus>("Insert Name, Assigned Line, Average Speed, Maximum Capacity, Actual Capacity, Electric?(1/0), Registration Number, and Low Floor Status, Number of USB ports, Plugged Status\n")));
 //                                    cout << "Insert Name, Assigned Line, Average Speed, Maximum Capacity, Actual Capacity, Electric?(1/0), Registration Number, and Low Floor Status, Number of USB ports, Plugged Status\n";
 //                                    Trolleybus * t = new Trolleybus();
 //                                    cin >> * t;
@@ -1759,8 +1845,8 @@ class Singleton{
                         try{
                           int i;
                         for (i = 0; i < depots.size(); ++i) {
-                            if (depots[i].getName() == global_depot_name) {
-                                cout << depots[i] << "\n";
+                            if (depots[i].getGenericObject().getName() == global_depot_name) {
+                                cout << depots[i].getGenericObject() << "\n";
                                 break;
                             }
                             if(i == depots.size()) {
@@ -1782,8 +1868,8 @@ class Singleton{
                         cin >> global_line_name;
                         try{
                         for (int i = 0; i < depots.size(); ++i) {
-                            if (depots[i].getName() == global_depot_name){
-                                depots[i].changeLine(global_pb_type, global_line_name);
+                            if (depots[i].getGenericObject().getName() == global_depot_name){
+                                depots[i].getGenericObject().changeLine(global_pb_type, global_line_name);
                             }
                           if( i == depots.size()) {
                             throw runtime_error (global_depot_name + " depot does not exist!");
@@ -1802,8 +1888,8 @@ class Singleton{
                         try{
                           int i;
                         for (i = 0; i < depots.size(); ++i) {
-                            if (depots[i].getName() == global_depot_name) {
-                                depots[i].deleteVehicle(global_pb_type);
+                            if (depots[i].getGenericObject().getName() == global_depot_name) {
+                                depots[i].getGenericObject().deleteVehicle(global_pb_type);
                                 break;
                             }
                          if(i == depots.size()) {
@@ -1825,12 +1911,12 @@ class Singleton{
                         try{
                           int i;
                         for (i = 0; i < depots.size(); ++i) {
-                            if (depots[i].getName() == global_depot_name) {
+                            if (depots[i].getGenericObject().getName() == global_depot_name) {
                                 //polimorfism
-                                PublicTransport * temp_pb = depots[i].getTrain(global_pb_type);
+                                PublicTransport * temp_pb = depots[i].getGenericObject().getTrain(global_pb_type);
                                 for (int j = 0; j < systems.size(); ++j) {
-                                    if (systems[j].getName() == global_system_name) {
-                                        temp_pb -> setTren(systems[j]);
+                                    if (systems[j].getGenericObject().getName() == global_system_name) {
+                                        temp_pb -> setTren(systems[j].getGenericObject());
                                     }
                                 }
                                 delete temp_pb;
@@ -1851,18 +1937,18 @@ class Singleton{
                         int i;
                         try{
                         for (i = 0; i < depots.size(); ++i) {
-                            for (int j = 0; j < depots[i].size(); ++j) {
+                            for (int j = 0; j < depots[i].getGenericObject().size(); ++j) {
 
-                                if (depots[i][j] -> getName() == global_pb_type) {
+                                if (depots[i].getGenericObject()[j] -> getName() == global_pb_type) {
                                   try{
 
 
-                                  if(depots[i][j]-> getType() != "Bus" && depots[i][j] -> getType()!= "Trolleybus") {
+                                  if(depots[i].getGenericObject()[j]-> getType() != "Bus" && depots[i].getGenericObject()[j] -> getType()!= "Trolleybus") {
                                     throw logic_error ( "\n" + global_pb_type + " doesn't support low floor.\n");
                                   }
                                     //if (depots[i][j] -> getType() == "Bus" || depots[i][j] -> getType() == "Trolleybus") {
                                         //polimorfism
-                                        Bus * b = dynamic_cast < Bus * > (depots[i][j]); //downcast de la trolleybus->bus
+                                        Bus * b = dynamic_cast < Bus * > (depots[i].getGenericObject()[j]); //downcast de la trolleybus->bus
                                         if(b != nullptr)
                                             b->switchLowFloor();
 
@@ -1892,14 +1978,14 @@ class Singleton{
                         try{
                           int i;
                         for (i = 0; i < depots.size(); ++i) {
-                            for (int j = 0; j < depots[i].size(); ++j) {
-                                if (depots[i][j] -> getName() == global_pb_type) {
+                            for (int j = 0; j < depots[i].getGenericObject().size(); ++j) {
+                                if (depots[i].getGenericObject()[j] -> getName() == global_pb_type) {
                                    try{
-                                     if (depots[i][j] -> getType() != "Trolleybus")
+                                     if (depots[i].getGenericObject()[j] -> getType() != "Trolleybus")
                                        throw runtime_error ( "\n" + global_pb_type + "is not a Trolleybus, only Trolleybuses are connected to wires");
 
                                         //polimorfism
-                                        Trolleybus * t = dynamic_cast < Trolleybus * > (depots[i][j]);
+                                        Trolleybus * t = dynamic_cast < Trolleybus * > (depots[i].getGenericObject()[j]);
                                         t -> changePlugStatus();
 
                                     }catch(const runtime_error & e) {
@@ -1939,7 +2025,7 @@ class Singleton{
         Singleton(const Singleton &) = delete;
         Singleton & operator=(const Singleton &) = delete;
 
-        static Singleton * getInstance(vector <System> &systems, vector<Depot> &depots) {
+        static Singleton * getInstance(vector < Object <System>> &systems, vector< Object<Depot>> &depots) {
             if(instance == nullptr){
               instance = new Singleton (systems, depots);
             }
@@ -1947,6 +2033,7 @@ class Singleton{
         }
 
         void run(){
+
           option = -1;
           do{
             try{
@@ -1992,40 +2079,44 @@ class Singleton{
     }
 };
 Singleton * Singleton::instance = nullptr;
+
 int main() {
     //  Bus a("autobuzu", 50, "M1", 100, 50, true, "B123", true);
     //  PublicTransport* result = a + 20;
     //  cout << *dynamic_cast<Bus*>(result);
     //  delete result;
-    vector < System > systems;
-    systems.push_back(System("system_metro.txt"));
-    systems.push_back(System("system_bus_tram_trolley.txt"));
+
+    vector < Object <System> > systems_wrapper;
+    systems_wrapper.push_back(Object <System>("system_metro.txt"));
+    systems_wrapper.push_back(Object <System>("system_bus_tram_trolley.txt"));
     //systems.push_back(System("system_cfr.txt"));
-    for (int i = 0; i < systems.size(); ++i) {
-        systems[i].loadSystem();
+    for (int i = 0; i < systems_wrapper.size(); ++i) {
+        systems_wrapper[i].loadObject();
     }
 
-    vector < Depot > depots;
-    depots.push_back(Depot("depoul_militari.txt"));
-    depots.push_back(Depot("depoul_berceni.txt"));
+    vector < Object <Depot> > depots_wrapper;
+    depots_wrapper.push_back(Object <Depot>("depoul_militari.txt"));
+    depots_wrapper.push_back(Object <Depot>("depoul_berceni.txt"));
     //depots.push_back(Depot("depoul_garadenord.txt"));
-    for (int i = 0; i < depots.size(); ++i) {
-        depots[i].loadDepot();
+    for (int i = 0; i < depots_wrapper.size(); ++i) {
+        depots_wrapper[i].loadObject();
     }
 
 
 
-    Singleton * MENIU = Singleton::getInstance(systems, depots);
+    Singleton * MENIU = Singleton::getInstance(systems_wrapper, depots_wrapper);
     MENIU -> run();
 
 
 
-    for (int i = 0; i < systems.size(); ++i) {
-        systems[i].saveSystem();
+    for (int i = 0; i < systems_wrapper.size(); ++i) {
+        systems_wrapper[i].saveObject();
     }
-    for (int i = 0; i < depots.size(); ++i) {
-        depots[i].saveDepot();
+    for (int i = 0; i < depots_wrapper.size(); ++i) {
+        depots_wrapper[i].saveObject();
     }
     cout << "All data saved. Program terminated.\n";
+
+
     return 0;
 }
