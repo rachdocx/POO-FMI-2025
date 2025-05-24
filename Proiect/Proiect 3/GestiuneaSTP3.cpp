@@ -1476,9 +1476,18 @@ class Object {
     const string& getFilePath() const {
           return file_path;
       }
-    void setFilePath(const std::string& path) {
+    void setFilePath(const string& path) {
           file_path = path;
       }
+
+    friend istream& operator >> (istream& is, Object<T> &obj) {
+      is >> obj.file_path;
+      return is;
+    }
+    friend ostream& operator << (ostream& os, Object<T> &obj) {
+        os << obj.file_path;
+        return os;
+    }
 };
 
 
@@ -2087,16 +2096,21 @@ int main() {
     //  delete result;
 
     vector < Object <System> > systems_wrapper;
-    systems_wrapper.push_back(Object <System>("system_metro.txt"));
-    systems_wrapper.push_back(Object <System>("system_bus_tram_trolley.txt"));
+    Object<System> temp;
+    ifstream f("config_systems.txt");
+    while(f>>temp){ systems_wrapper.push_back(temp); }
+//    systems_wrapper.push_back(Object <System>("system_metro.txt"));
+//    systems_wrapper.push_back(Object <System>("system_bus_tram_trolley.txt"));
     //systems.push_back(System("system_cfr.txt"));
     for (int i = 0; i < systems_wrapper.size(); ++i) {
         systems_wrapper[i].loadObject();
     }
-
     vector < Object <Depot> > depots_wrapper;
-    depots_wrapper.push_back(Object <Depot>("depoul_militari.txt"));
-    depots_wrapper.push_back(Object <Depot>("depoul_berceni.txt"));
+    ifstream g("config_depots.txt");
+    Object<Depot> temp1;
+    while(g>>temp1){depots_wrapper.push_back(temp1);}
+//    depots_wrapper.push_back(Object <Depot>("depoul_militari.txt"));
+//    depots_wrapper.push_back(Object <Depot>("depoul_berceni.txt"));
     //depots.push_back(Depot("depoul_garadenord.txt"));
     for (int i = 0; i < depots_wrapper.size(); ++i) {
         depots_wrapper[i].loadObject();
@@ -2115,8 +2129,9 @@ int main() {
     for (int i = 0; i < depots_wrapper.size(); ++i) {
         depots_wrapper[i].saveObject();
     }
-    cout << "All data saved. Program terminated.\n";
 
+
+    cout << "All data saved. Program terminated.\n";
 
     return 0;
 }
