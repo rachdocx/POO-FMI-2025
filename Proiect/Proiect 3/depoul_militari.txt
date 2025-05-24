@@ -1,6 +1,7 @@
 Depoul_Militari
-4
+5
 Tram 102 102 70 0 0 0 0 
 Tram Tramvaiul1 1 60 200 0 1 30 
+Trolleybus Troleul135 102 60 120 0 0 B-321-PMB 1 0 0 
 Trolleybus Troleul62 102 50 140 0 1 B-456-PMB 1 20 1 
 Metro Viena M2 70 800 0 1 7 
