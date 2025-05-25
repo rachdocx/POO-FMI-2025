@@ -2129,7 +2129,7 @@ int main() {
     for (int i = 0; i < depots_wrapper.size(); ++i) {
         depots_wrapper[i].saveObject();
     }
-
+    MENIU -> removeInstance();
 
     cout << "All data saved. Program terminated.\n";
 
