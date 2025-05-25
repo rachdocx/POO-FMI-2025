@@ -129,6 +129,7 @@ string global_first_name, global_last_name, global_contract_type, global_hire_da
 int nr_minori;
 int main() {
     vector <Angajat *> angajati;
+    //de facut meniu d ala singletone daca ai chef.
     while (f>>global_first_name>>global_last_name) {
         f>>global_contract_type;
         if (global_contract_type == "plata_cu_ora") {
