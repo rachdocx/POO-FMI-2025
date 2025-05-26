@@ -1,0 +1,4 @@
+produs_perisabil 03.05.2015 150 kg cirese 5_zile 20
+produs 05.05.2015 500 bucata 15
+produs_perisabil_reducere 16.05.2015 300 kg cirese 3_zile 15 20
+produs_reducere 19.05.2015 100 litri rom 25 litru 10
