@@ -18,7 +18,7 @@
 #include <ctime>
 #include <iomanip>
 //am folosit si alocare dinamica si stl si vectori statici
-//nu am folosit list, am ales sa folosesc alt stl, adica dequeue ca are mai mult sens pentru proiect
+//nu am folosit list, am ales sa folosesc alt stl, adica deque ca are mai mult sens pentru proiect
 
 //run with clang++ -std=c++17 -o GestiuneaSTP GestiuneaSTP.cpp
 //command+f pentru: "polimforism", "CLASA ABSTRACTA", "virtual", "diamant"

@@ -122,6 +122,7 @@ public:
         this ->pret = pret;
         this -> cod = cod;
 
+
     }
     ~Formular() {
         if (pachet != nullptr)
