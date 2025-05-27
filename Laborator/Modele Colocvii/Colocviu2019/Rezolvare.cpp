@@ -1,5 +1,19 @@
 #include <iostream>
 using namespace std;
+class Clasa {
+private:
+public:
+
+
+    friend ostream & operator << (ostream & os, Clasa & obj) {
+
+        return os;
+    }
+    friend istream & operator >> (istream & is, Clasa & obj) {
+
+        return is;
+    }
+};
 class Masca {
 private:
     string tip,culoare;

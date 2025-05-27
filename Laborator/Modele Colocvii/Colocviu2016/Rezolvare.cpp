@@ -11,6 +11,15 @@ public:
         this->preProd = predProd;
     }
     ~Produs() = default;
+    friend ostream & operator << (ostream & os, Produs & obj) {
+
+        os<<obj.denProd<<" "<<obj.preProd;
+        return os;
+    }
+    friend istream & operator >> (istream & is, Produs & obj) {
+        is>>obj.denProd>>obj.preProd;
+        return is;
+    }
 };
 class Data {
 private:
@@ -36,6 +45,10 @@ public:
     int getAn() {
         return an;
     }
+    friend ostream & operator << (ostream & os, Data & obj) {
+        os<<obj.zi<<" "<<obj.luna<<" "<<obj.an;
+        return os;
+    }
 };
 class Comanda {
     int Num, nrPortii;
@@ -56,6 +69,14 @@ public:
     }
     Data * getData() {
         return d;
+    }
+    friend ostream & operator << (ostream & os, Comanda & obj) {
+        os<<*obj.d<<endl<<*obj.Prod<<endl<<obj.Num<<" "<<obj.nrPortii;
+        return os;
+    }
+    friend istream & operator >> (istream & is, Comanda & obj) {
+        is>>*obj.d >> *obj.Prod>>obj.Num>>obj.nrPortii;
+        return is;
     }
 };
 class Ospatar {
@@ -78,6 +99,14 @@ public:
             delete i;
         comenzi.clear();
     }
+    friend ostream & operator << (ostream & os, Ospatar & obj) {
+        os<<
+        return os;
+    }
+    friend istream & operator >> (istream & is, Ospatar & obj) {
+        is>>*obj.d >> *obj.Prod>>obj.Num>>obj.nrPortii;
+        return is;
+    }
 };
 class CompSpec:public Comanda{
     float pretSupl;
@@ -88,6 +117,14 @@ public:
         this->ObsC = ObsC;
     }
     ~CompSpec() = default;
+    friend ostream & operator << (ostream & os, CompSpec & obj) {
+        os<<static_cast<Comanda&>(obj)<<endl<<obj.pretSupl<<" "<<obj.ObsC;
+        return os;
+    }
+    friend istream & operator >> (istream & is, CompSpec & obj) {
+        is>>static_cast<Comanda&>(obj)>>obj.pretSupl>>obj.ObsC;
+        return is;
+    }
 };
 template <class T>
 class CompOnline {
@@ -106,6 +143,14 @@ public:
     }
     T * getComanda() {
         return comanda;
+    }
+    friend ostream & operator << (ostream & os, CompOnline & obj) {
+        os<<static_cast<T&>(obj)<<endl<<" "<<obj.adrLivr<<" "<<obj.comLivr;
+        return os;
+    }
+    friend istream & operator >> (istream & is, CompOnline & obj) {
+        is>>static_cast<T&>(obj) >> obj.adrLivr >> obj.comLivr;
+        return is;
     }
 };
 class Menu {
@@ -173,9 +218,7 @@ void Menu::AdaugareComanda() {
         comenziOnlineSpec.push_back(temp2);
     }
 }
-void Menu::AfisareComenzi() {
-    for (aut)
-}
+
 
 int main() {
     Menu *s = Menu::getInstance();
