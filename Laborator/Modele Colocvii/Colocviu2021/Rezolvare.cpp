@@ -3,20 +3,6 @@
 #include <vector>
 #include <string>
 using namespace std;
-class Clasa {
-private:
-public:
-
-    
-    friend ostream & operator << (ostream & os, Clasa & obj) {
-
-        return os;
-    }
-    friend istream & operator >> (istream & is, Clasa & obj) {
-
-        return is;
-    }
-};
 class Data {
 private:
   int zi,luna,an;
