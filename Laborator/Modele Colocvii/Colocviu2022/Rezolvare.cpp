@@ -287,8 +287,6 @@ int main() {
                 }
                 break;
             }
-
-
         }
     }while (op!=0);
     return 0;
