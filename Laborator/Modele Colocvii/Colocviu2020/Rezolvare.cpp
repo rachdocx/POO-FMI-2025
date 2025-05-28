@@ -364,12 +364,25 @@ public:
 
     }
 };
-
+const float Dezinfectant::totalBacterii = 100.0f;
+const float Dezinfectant::totalFungi = 100.0f;
+const float Dezinfectant::totalVirusi = 100.0f;
 int main() {
 
  Menu *s = Menu::getInstance();
     int op=-1;
     do {
+        cout<<"1. Adaugare dezinfectant pe stoc\n";
+        cout<<"2. Adaugare masca pe stoc\n";
+        cout<<"3. Adaugare Achizitie\n";
+        cout<<"4. Afisati cel mai eficient dezinfectant\n";
+        cout<<"5. Afisati totalul intr-o luna citita\n";
+        cout<<"6. Afisati profitul facut din masti speciale\n";
+        cout<<"7. Modificati o reteta\n";
+        cout<<"8. Afisati clientul fidel\n";
+        cout<<"9. Afisati luna cu cel mai slab venit\n";
+        cout<<"10. Afisati cat TVA trebuie platit\n";
+        cout<<"0. Exit\n";
         cin>>op;
         try {
             if (op<0 || op >10)
