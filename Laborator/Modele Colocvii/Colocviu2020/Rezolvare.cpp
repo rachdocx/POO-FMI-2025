@@ -41,12 +41,16 @@ public:
         is>>o.an;
         return is;
     }
+    int getLuna() {
+        return luna;
+    }
 };
 class Masca{
 protected:
       string tip_prot;
         float pret;
 public:
+
     Masca(string tip_prot = "N/A", float pret = 0) {
         this->tip_prot = tip_prot;
         this->pret = pret;
@@ -138,24 +142,38 @@ public:
 };
 class Dezinfectant {
     int nr_vir,nr_fun,nr_bac;
+    float pret;
     vector<string>ingrediente;
     vector<string>suprafete;
+    float eficienta;
 
     static const float  totalBacterii;
     static const float totalFungi;
     static const float totalVirusi;
 
 public:
-    Dezinfectant(int nr_vir = 0, int nr_fun =0, int nr_bac = 0, vector<string>ingrediente={}, vector<string>suprafete={}) {
+    Dezinfectant * getDezinfectant() {
+        return this;
+    }
+    float getEficienta() {
+        return eficienta;
+    }
+    float getPret() {
+        return pret;
+    }
+    Dezinfectant(int nr_vir = 0, int nr_fun =0, int nr_bac = 0,float pret =0, vector<string>ingrediente={}, vector<string>suprafete={}) {
         this->ingrediente=ingrediente;
         this->nr_bac=nr_bac;
+        this->pret=pret;
         this->nr_fun=nr_fun;
         this->nr_vir=nr_fun;
         this->suprafete=suprafete;
+        this->eficienta =this->nr_bac/totalBacterii + this->nr_fun/nr_fun+this->nr_vir/totalVirusi;
     }
     ~Dezinfectant() = default;
     friend ostream & operator << (ostream & os, Dezinfectant & obj) {
-        os<<"Dezinfectantul omoara: "<<obj.nr_fun<<" "<<obj.nr_bac<<" "<<obj.nr_vir;
+        os<<"Dezinfectantul omoara: "<<obj.nr_fun<<" "<<obj.nr_bac<<" "<<obj.nr_vir<<endl;
+        os<<"Pretul dezinfectantului este: "<<obj.pret;
         os<<endl<<"Ingredientele dezinfectantului sunt:\n";
         for (auto i:obj.ingrediente)
             os<<i<<" ";
@@ -167,6 +185,8 @@ public:
     friend istream & operator >> (istream & is, Dezinfectant & obj) {
         cout<<"Introduceti numarul de bacterii, virusuri si fungi: ";
         is>>obj.nr_bac>>obj.nr_vir>>obj.nr_fun;
+        cout<<"Introduceti pretul: ";
+        is>>obj.pret;
         int n;
         cout<<"Introduceti numarul de ingrediente: ";
         is>>n;
@@ -193,15 +213,24 @@ class Achizitie {
     vector<Dezinfectant*> dezinfectanti;
     vector<Masca*> masti;
     string nume;
-    int total;
+    float total;
 public:
+    float getTotal() {
+        return total;
+    }
+    vector<Masca*>getMasti() {
+        return masti;
+    }
     Achizitie(Data * data = nullptr, vector<Dezinfectant*> dezinfectanti = {}, vector<Masca*> masti= {}, string nume ="N/A", int total=0) {
         this->data=data;
         this->dezinfectanti=dezinfectanti;
         this->masti=masti;
         this->nume = nume;
         this->total = total;
-
+        for (auto i:dezinfectanti)
+            total+=i->getPret();
+        for (auto i:masti)
+            total+=i->getPret();
     }
     ~Achizitie() {
         if (data != nullptr)
@@ -272,7 +301,9 @@ public:
         }
         return is;
     }
-
+    Data * getData() {
+        return data;
+    }
 };
 class Menu {
 private:
@@ -280,49 +311,132 @@ private:
     Menu(const Menu &)=delete;
     Menu & operator=(const Menu&) = delete;
     inline static Menu * MENU;
+    vector<Masca*> masti;
+    vector<Dezinfectant*> dezinfectanti;
+    vector<Achizitie*> achiztii;
 public:
     static Menu * getInstance() {
         if (MENU == nullptr)
             MENU = new Menu();
         return MENU;
     }
-    //functii
+    void adaugareDezinfectantStoc() {
+        Dezinfectant * temp = new Dezinfectant();
+        cin>>*temp;
+        dezinfectanti.push_back(temp);
+    }
+    void adaugareMascaStoc() {
+        Masca * temp = new Masca();
+        cin>>*temp;
+        masti.push_back(temp);
+    }
+    void adauagreAchizitie() {
+        Achizitie * temp = new Achizitie();
+        cin>>*temp;
+        achiztii.push_back(temp);
+    }
+    void dezinfectantEficient() {
+        Dezinfectant * ma = dezinfectanti[0];
+        float mav = ma->getEficienta();
+        for (auto i:dezinfectanti)
+            if (i->getEficienta()>mav) {
+                mav=i->getEficienta();
+                ma=i;
+            }
+        cout<<*ma;
+    }
+    void totalLuna(int k) {
+        float suma = 0;
+        for (auto i:achiztii) {
+            Data * d =i->getData();
+            if (d->getLuna() == k)
+                suma+=i->getTotal();
+        }
+        cout<<suma;
+    }
+    void totalMastiPref() {
+        float suma =0;
+        for (auto i:achiztii) {
+            vector<Masca*>  mastia = i->getMasti();
+            for (auto j:mastia) {
+                if (MascaChirurgicalaPref * temp = dynamic_cast<MascaChirurgicalaPref*>(j))
+                    suma+=temp->getPret();
+            }
+        }
+        cout<<suma;
+    }
+    void modificaReteta() {
+
+    }
+    void clientFidel() {
+
+    }
+    void ziVenitSlab() {
+
+    }
+    void TVA() {
+
+    }
 };
 
 int main() {
-    Achizitie m;
-    cin>>m;
-    cout<<m;
- // Menu *s = Menu::getInstance();
- //    int op=-1;
- //    do {
- //
- //        cin>>op;
- //        try {
- //            if (op<0 || op >4)
- //                throw logic_error("Optiunea nu este valida!\n");
- //            switch (op) {
- //                case 1: {
- //
- //                    break;
- //                }
- //                case 2: {
- //
- //                    break;
- //                }
- //                case 3: {
- //
- //                    break;
- //                }
- //                case 4: {
- //
- //                    break;
- //                }
- //            }
- //        }catch (logic_error & e) {
- //            cout<<e.what();
- //        }
- //    }while (op!=0);
+
+ Menu *s = Menu::getInstance();
+    int op=-1;
+    do {
+        cin>>op;
+        try {
+            if (op<0 || op >10)
+                throw logic_error("Optiunea nu este valida!\n");
+            switch (op) {
+                case 1: {
+                    s->adaugareDezinfectantStoc();
+                    break;
+                }
+                case 2: {
+                    s->adaugareMascaStoc();
+                    break;
+                }
+                case 3: {
+                    s->adauagreAchizitie();
+                    break;
+                }
+                case 4: {
+                    s->dezinfectantEficient();
+                    break;
+                }
+                case 5: {
+                    cout<<"Citeste luna pe care o vrei: ";
+                    int k;
+                    cin>>k;
+                    s->totalLuna(k);
+                    break;
+                }
+                case 6: {
+                    s->totalMastiPref();
+                    break;
+                }
+                case 7: {
+                    s->modificaReteta();
+                    break;
+                }
+                case 8: {
+                    s->clientFidel();
+                    break;
+                }
+                case 9: {
+                    s->ziVenitSlab();
+                    break;
+                }
+                case 10: {
+                    s->TVA();
+                    break;
+                }
+            }
+        }catch (logic_error & e) {
+            cout<<e.what();
+        }
+    }while (op!=0);
     
     return 0;
 }
