@@ -86,6 +86,7 @@ protected:
     int nrComenzi;
     char gen;
     int varsta;
+
 public:
     Ospatar(string Nume = "N/A", vector<Comanda*> comenzi ={},int nrComenzi =0, char gen='0', int varsta = 0) {
         this->Nume = Nume;
@@ -100,14 +101,24 @@ public:
         comenzi.clear();
     }
     friend ostream & operator << (ostream & os, Ospatar & obj) {
-        os<<
+
         return os;
     }
     friend istream & operator >> (istream & is, Ospatar & obj) {
-        is>>*obj.d >> *obj.Prod>>obj.Num>>obj.nrPortii;
+        cout<<"Introduceti numarul de comenzi:";
+        int nr;
+        cin>>nr;
+        for(int i=1;i<=nr;++i)
+          {Comanda c;
+            cin>>c;
+            obj.comenzi.push_back(&c);
+
+
+          }
         return is;
     }
 };
+
 class CompSpec:public Comanda{
     float pretSupl;
     string ObsC;

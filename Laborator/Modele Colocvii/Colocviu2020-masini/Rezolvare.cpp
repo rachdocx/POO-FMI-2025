@@ -171,6 +171,7 @@ public:
                 obj.masini.push_back(temp);
             }
         }
+
         return is;
     }
 };
@@ -179,7 +180,7 @@ private:
     Menu()=default;
     Menu(const Menu &)=delete;
     Menu & operator=(const Menu&) = delete;
-    inline static Menu * MENU;
+    static Menu * MENU;
     vector<Tranzactie*> tranzactie;
     vector<Masina*> stoc;
 public:
@@ -261,7 +262,7 @@ public:
     }
 
 };
-
+Menu* Menu::MENU=nullptr;
 int main() {
  Menu *s = Menu::getInstance();
     int op=-1;
@@ -305,6 +306,5 @@ int main() {
             cout<<e.what();
         }
     }while (op!=0);
-
     return 0;
 }
