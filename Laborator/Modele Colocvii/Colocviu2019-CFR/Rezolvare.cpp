@@ -236,6 +236,9 @@ int main() {
         cout<<"\n4. Anulare bilet\n";
         cin>>op;
         try {
+
+
+
             if (op<0 || op >4)
                 throw logic_error("Optiunea nu este valida!\n");
             switch (op) {
