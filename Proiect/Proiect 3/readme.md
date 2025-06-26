@@ -10,13 +10,13 @@ The application is built using advanced C++ features, demonstrating a deep under
 
 ## Features
 
-- [cite_start]**System and Line Management**: Create and manage distinct transport systems (e.g., `STB`, `Metrorex`). [cite: 26, 23] Within each system, define, add, or remove transport lines and their respective stations.
-- [cite_start]**Vehicle Fleet Management**: Manage depots that house various public transport vehicles. [cite: 2, 25] Add new vehicles of different types (`Bus`, `Tram`, `Trolleybus`, `Metro`) to a depot.
+- **System and Line Management**: Create and manage distinct transport systems (e.g., `STB`, `Metrorex`). [cite: 26, 23] Within each system, define, add, or remove transport lines and their respective stations.
+- **Vehicle Fleet Management**: Manage depots that house various public transport vehicles. [cite: 2, 25] Add new vehicles of different types (`Bus`, `Tram`, `Trolleybus`, `Metro`) to a depot.
 - **Vehicle Configuration**: Modify vehicle properties, such as assigning a vehicle to a different line.
 - **Polymorphic Vehicle Interaction**: Utilize type-specific functionalities for vehicles, such as managing the low-floor feature for a `Bus` or the overhead wire connection for a `Trolleybus`.
 - **Live Ride Simulation**: Initiate a real-time simulation for any vehicle. The simulation shows the vehicle moving between stations on its assigned line, calculating travel times, and updating passenger capacity dynamically. The simulation can be stopped at any time by the user.
-- [cite_start]**Data Persistence**: All system, line, and depot data is loaded from `.txt` files on startup and can be saved back, preserving the state of the application between sessions. [cite: 6]
-- [cite_start]**Interactive Console Menu**: A robust, user-friendly menu built on the Singleton pattern allows the user to navigate through all the available management and simulation options. [cite: 7]
+- **Data Persistence**: All system, line, and depot data is loaded from `.txt` files on startup and can be saved back, preserving the state of the application between sessions. [cite: 6]
+- **Interactive Console Menu**: A robust, user-friendly menu built on the Singleton pattern allows the user to navigate through all the available management and simulation options. [cite: 7]
 
 ---
 
